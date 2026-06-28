@@ -9,70 +9,78 @@ interface SphereProps {
   mouseRef: React.MutableRefObject<{ x: number; y: number }>;
 }
 
-// Double rotating 3D centerpiece representing a glowing atomic molecule/nucleus system
+// Interactive 3D Solar System centerpiece with a glowing real Sun, planets, and moons
 function DualRotatingSphere({ mouseRef }: SphereProps) {
   const modelGroupRef = useRef<THREE.Group>(null);
-  const nucleusGroupRef = useRef<THREE.Group>(null);
   
-  const orbit1GroupRef = useRef<THREE.Group>(null);
-  const orbit2GroupRef = useRef<THREE.Group>(null);
-  const orbit3GroupRef = useRef<THREE.Group>(null);
+  const sunRef = useRef<THREE.Mesh>(null);
+  const sunCoronaRef = useRef<THREE.Mesh>(null);
+  
+  const p1Ref = useRef<THREE.Mesh>(null);
+  
+  const p2GroupRef = useRef<THREE.Group>(null);
+  const moonRef = useRef<THREE.Mesh>(null);
+  
+  const p3GroupRef = useRef<THREE.Group>(null);
 
-  const e1Ref = useRef<THREE.Mesh>(null);
-  const e2Ref = useRef<THREE.Mesh>(null);
-  const e3Ref = useRef<THREE.Mesh>(null);
-  
   const pointsRef = useRef<THREE.Points>(null);
-  const lightRef = useRef<THREE.PointLight>(null);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
     const { x, y } = mouseRef.current;
 
-    // 1. Position the point light relative to pointer coords
-    if (lightRef.current) {
-      lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, x * 5.0, 0.08);
-      lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, y * 5.0, 0.08);
+    // 1. Orbit Planet 1 (Inner)
+    if (p1Ref.current) {
+      p1Ref.current.position.x = 1.2 * Math.cos(time * 1.8);
+      p1Ref.current.position.y = 1.2 * Math.sin(time * 1.8);
+      p1Ref.current.rotation.y = time * 2.0;
     }
 
-    // 2. Nucleus slow rotation
-    if (nucleusGroupRef.current) {
-      nucleusGroupRef.current.rotation.y = time * 0.15;
-      nucleusGroupRef.current.rotation.x = time * 0.08;
+    // 2. Orbit Planet 2 group (Middle)
+    if (p2GroupRef.current) {
+      p2GroupRef.current.position.x = 1.8 * Math.cos(time * 1.2);
+      p2GroupRef.current.position.y = 1.8 * Math.sin(time * 1.2);
+      p2GroupRef.current.rotation.y = time * 1.5;
+    }
+    // Orbit Moon locally around Planet 2
+    if (moonRef.current) {
+      moonRef.current.position.x = 0.22 * Math.cos(time * 4.5);
+      moonRef.current.position.y = 0.22 * Math.sin(time * 4.5);
+      moonRef.current.position.z = 0.08 * Math.sin(time * 4.5);
     }
 
-    // 3. Move electrons along their orbits over time
-    const radius = 1.8;
-    if (e1Ref.current) {
-      e1Ref.current.position.x = radius * Math.cos(time * 1.6);
-      e1Ref.current.position.y = radius * Math.sin(time * 1.6);
-    }
-    if (e2Ref.current) {
-      e2Ref.current.position.x = radius * Math.cos(time * 2.3 + 1.0);
-      e2Ref.current.position.y = radius * Math.sin(time * 2.3 + 1.0);
-    }
-    if (e3Ref.current) {
-      e3Ref.current.position.x = radius * Math.cos(time * 1.9 + 2.0);
-      e3Ref.current.position.y = radius * Math.sin(time * 1.9 + 2.0);
+    // 3. Orbit Planet 3 group (Outer)
+    if (p3GroupRef.current) {
+      p3GroupRef.current.position.x = 2.4 * Math.cos(time * 0.7);
+      p3GroupRef.current.position.y = 2.4 * Math.sin(time * 0.7);
+      p3GroupRef.current.rotation.y = time * 0.8;
     }
 
-    // 4. Smooth mouse tilt on the main model group
+    // 4. Rotate Sun and pulse Corona glow
+    if (sunRef.current) {
+      sunRef.current.rotation.y = time * 0.15;
+    }
+    if (sunCoronaRef.current) {
+      sunCoronaRef.current.rotation.y = -time * 0.05;
+      const pulse = 1.0 + Math.sin(time * 1.5) * 0.03; // pulsing corona
+      sunCoronaRef.current.scale.set(pulse, pulse, pulse);
+    }
+
+    // 5. Smooth mouse tilt on the solar system
     if (modelGroupRef.current) {
-      modelGroupRef.current.rotation.x = THREE.MathUtils.lerp(modelGroupRef.current.rotation.x, y * 0.5, 0.08);
-      modelGroupRef.current.rotation.y = THREE.MathUtils.lerp(modelGroupRef.current.rotation.y, x * 0.5, 0.08);
+      modelGroupRef.current.rotation.x = THREE.MathUtils.lerp(modelGroupRef.current.rotation.x, y * 0.45, 0.08);
+      modelGroupRef.current.rotation.y = THREE.MathUtils.lerp(modelGroupRef.current.rotation.y, x * 0.45, 0.08);
     }
 
-    // 5. Sway surrounding particle shell
+    // 6. Starfield particles rotation
     if (pointsRef.current) {
-      pointsRef.current.rotation.y = -time * 0.015 - x * 0.08;
-      pointsRef.current.rotation.x = time * 0.003 - y * 0.08;
-      const scale = 1.0 + Math.sin(time * 0.3) * 0.04;
-      pointsRef.current.scale.set(scale, scale, scale);
+      pointsRef.current.rotation.y = -time * 0.008 - x * 0.05;
+      pointsRef.current.rotation.x = time * 0.001 - y * 0.05;
     }
   });
 
-  // Particles coordinates
-  const particlesCount = 260;
+  // Particles coordinates (Outer Space background)
+  const particlesCount = 280;
   const positions = useMemo(() => {
     const pos = new Float32Array(particlesCount * 3);
     for (let i = 0; i < particlesCount; i++) {
@@ -80,7 +88,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
       const phi = Math.acos(2.0 * v - 1.0);
-      const r = 2.4 + Math.random() * 2.6;
+      const r = 2.6 + Math.random() * 2.8;
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       pos[i * 3 + 2] = r * Math.cos(phi);
@@ -90,106 +98,126 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
   return (
     <group>
-      {/* Light tracking the pointer */}
-      <pointLight ref={lightRef} intensity={35} distance={15} color="#00D4FF" />
+      {/* Central Sun point light source casting rays outward */}
+      <pointLight position={[0, 0, 0]} intensity={45} distance={15} color="#ffaa00" />
 
-      {/* Main Model Group (Tilts with mouse) */}
+      {/* Main Solar System Model Group (Tilts with mouse) */}
       <group ref={modelGroupRef}>
         
-        {/* Central Nucleus Cluster */}
-        <group ref={nucleusGroupRef}>
-          {/* Binding Energy Cloud Core */}
-          <mesh>
-            <sphereGeometry args={[0.45, 32, 32]} />
+        {/* Central Glowing Sun */}
+        <group>
+          {/* Main Hot Sun Core */}
+          <mesh ref={sunRef}>
+            <sphereGeometry args={[0.52, 32, 32]} />
             <meshStandardMaterial
-              color="#00D4FF"
-              emissive="#00D4FF"
-              emissiveIntensity={0.65}
-              transparent
-              opacity={0.3}
-              roughness={0.1}
-              metalness={0.9}
+              color="#ffcc00"
+              emissive="#ff4400"
+              emissiveIntensity={2.5}
+              roughness={0.2}
+              metalness={0.1}
             />
           </mesh>
-          
-          {/* Protons & Neutrons tightly bound */}
-          {/* Proton 1 (Cyan) */}
-          <mesh position={[0.12, 0.08, -0.05]}>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.8} metalness={0.8} roughness={0.2} />
-          </mesh>
-          {/* Proton 2 (Cyan) */}
-          <mesh position={[-0.12, -0.08, 0.05]}>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.8} metalness={0.8} roughness={0.2} />
-          </mesh>
-          {/* Proton 3 (Cyan) */}
-          <mesh position={[0.05, -0.12, -0.08]}>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.8} metalness={0.8} roughness={0.2} />
-          </mesh>
-          {/* Neutron 1 (Purple) */}
-          <mesh position={[-0.08, 0.12, 0.08]}>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.7} metalness={0.8} roughness={0.2} />
-          </mesh>
-          {/* Neutron 2 (Purple) */}
-          <mesh position={[0.08, -0.05, 0.12]}>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.7} metalness={0.8} roughness={0.2} />
-          </mesh>
-          {/* Neutron 3 (Purple) */}
-          <mesh position={[-0.05, -0.1, -0.12]}>
-            <sphereGeometry args={[0.15, 16, 16]} />
-            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.7} metalness={0.8} roughness={0.2} />
+          {/* Glowing Sun Corona Aura */}
+          <mesh ref={sunCoronaRef}>
+            <sphereGeometry args={[0.58, 32, 32]} />
+            <meshBasicMaterial
+              color="#ff7700"
+              transparent
+              opacity={0.4}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
           </mesh>
         </group>
 
-        {/* Orbit 1 (Tilted X) */}
-        <group ref={orbit1GroupRef} rotation={[Math.PI / 3, 0, 0]}>
+        {/* Orbit 1 (Inner - Tilted slightly) */}
+        <group rotation={[Math.PI / 12, 0, 0]}>
           {/* Orbit Line Ring */}
           <mesh>
-            <torusGeometry args={[1.8, 0.008, 8, 64]} />
-            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.4} transparent opacity={0.35} />
+            <torusGeometry args={[1.2, 0.005, 8, 64]} />
+            <meshStandardMaterial color="#6B6B80" transparent opacity={0.12} />
           </mesh>
-          {/* Electron 1 */}
-          <mesh ref={e1Ref}>
-            <sphereGeometry args={[0.09, 16, 16]} />
-            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={1.3} roughness={0.1} metalness={0.9} />
+          {/* Mercury/Venus-like Planet */}
+          <mesh ref={p1Ref}>
+            <sphereGeometry args={[0.065, 16, 16]} />
+            <meshStandardMaterial
+              color="#ffb347"
+              roughness={0.4}
+              metalness={0.6}
+              emissive="#ffb347"
+              emissiveIntensity={0.15}
+            />
           </mesh>
         </group>
 
-        {/* Orbit 2 (Tilted Y & Z) */}
-        <group ref={orbit2GroupRef} rotation={[0, Math.PI / 3, Math.PI / 4]}>
+        {/* Orbit 2 (Middle - Tilted Earth-like) */}
+        <group rotation={[-Math.PI / 18, Math.PI / 24, 0]}>
           {/* Orbit Line Ring */}
           <mesh>
-            <torusGeometry args={[1.8, 0.008, 8, 64]} />
-            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.4} transparent opacity={0.35} />
+            <torusGeometry args={[1.8, 0.005, 8, 64]} />
+            <meshStandardMaterial color="#6B6B80" transparent opacity={0.12} />
           </mesh>
-          {/* Electron 2 */}
-          <mesh ref={e2Ref}>
-            <sphereGeometry args={[0.09, 16, 16]} />
-            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={1.3} roughness={0.1} metalness={0.9} />
-          </mesh>
+          {/* Earth-like Planet + Orbiting Moon Group */}
+          <group ref={p2GroupRef}>
+            {/* Blue Planet */}
+            <mesh>
+              <sphereGeometry args={[0.09, 16, 16]} />
+              <meshStandardMaterial
+                color="#00aaff"
+                roughness={0.2}
+                metalness={0.8}
+                emissive="#0066ff"
+                emissiveIntensity={0.15}
+              />
+            </mesh>
+            {/* Tiny Orbiting Moon */}
+            <mesh ref={moonRef}>
+              <sphereGeometry args={[0.025, 12, 12]} />
+              <meshStandardMaterial
+                color="#cccccc"
+                roughness={0.6}
+                metalness={0.1}
+              />
+            </mesh>
+          </group>
         </group>
 
-        {/* Orbit 3 (Tilted Inverse) */}
-        <group ref={orbit3GroupRef} rotation={[Math.PI / 4, -Math.PI / 3, 0]}>
+        {/* Orbit 3 (Outer - Tilted Saturn-like) */}
+        <group rotation={[Math.PI / 24, -Math.PI / 16, 0]}>
           {/* Orbit Line Ring */}
           <mesh>
-            <torusGeometry args={[1.8, 0.008, 8, 64]} />
-            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.4} transparent opacity={0.35} />
+            <torusGeometry args={[2.4, 0.005, 8, 64]} />
+            <meshStandardMaterial color="#6B6B80" transparent opacity={0.12} />
           </mesh>
-          {/* Electron 3 */}
-          <mesh ref={e3Ref}>
-            <sphereGeometry args={[0.09, 16, 16]} />
-            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={1.3} roughness={0.1} metalness={0.9} />
-          </mesh>
+          {/* Saturn Planet + Ring Group */}
+          <group ref={p3GroupRef}>
+            {/* Orange Planet */}
+            <mesh>
+              <sphereGeometry args={[0.08, 16, 16]} />
+              <meshStandardMaterial
+                color="#ff6600"
+                roughness={0.3}
+                metalness={0.7}
+                emissive="#ff3300"
+                emissiveIntensity={0.1}
+              />
+            </mesh>
+            {/* Planetary Ring */}
+            <mesh rotation={[Math.PI / 3, 0, 0]}>
+              <torusGeometry args={[0.155, 0.012, 4, 32]} />
+              <meshStandardMaterial
+                color="#ccaa99"
+                transparent
+                opacity={0.65}
+                roughness={0.4}
+              />
+            </mesh>
+          </group>
         </group>
 
       </group>
 
-      {/* Surrounding starfield particles */}
+      {/* Surrounding Space Starfield particles */}
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute
