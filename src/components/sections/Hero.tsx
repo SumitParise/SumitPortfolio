@@ -24,6 +24,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
   const p1Ref = useRef<THREE.Mesh>(null);
   
   const p2GroupRef = useRef<THREE.Group>(null);
+  const earthCloudsRef = useRef<THREE.Mesh>(null);
   const moonRef = useRef<THREE.Mesh>(null);
   
   const p3GroupRef = useRef<THREE.Group>(null);
@@ -55,31 +56,35 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
     const time = state.clock.getElapsedTime();
     const { x, y } = mouseRef.current;
 
-    // 1. Orbit Planet 1 (Inner)
+    // 1. Slow Orbit Planet 1 (Inner)
     if (p1Ref.current) {
-      p1Ref.current.position.x = 1.2 * Math.cos(time * 1.8);
-      p1Ref.current.position.y = 1.2 * Math.sin(time * 1.8);
-      p1Ref.current.rotation.y = time * 2.0;
+      p1Ref.current.position.x = 1.2 * Math.cos(time * 0.8);
+      p1Ref.current.position.y = 1.2 * Math.sin(time * 0.8);
+      p1Ref.current.rotation.y = time * 1.2;
     }
 
-    // 2. Orbit Planet 2 group (Middle)
+    // 2. Slow Orbit Planet 2 group (Middle)
     if (p2GroupRef.current) {
-      p2GroupRef.current.position.x = 1.8 * Math.cos(time * 1.2);
-      p2GroupRef.current.position.y = 1.8 * Math.sin(time * 1.2);
-      p2GroupRef.current.rotation.y = time * 1.5;
+      p2GroupRef.current.position.x = 1.8 * Math.cos(time * 0.5);
+      p2GroupRef.current.position.y = 1.8 * Math.sin(time * 0.5);
+      p2GroupRef.current.rotation.y = time * 0.8;
     }
-    // Orbit Moon locally around Planet 2
+    // Orbit Moon locally around Planet 2 (slowed down)
     if (moonRef.current) {
-      moonRef.current.position.x = 0.22 * Math.cos(time * 4.5);
-      moonRef.current.position.y = 0.22 * Math.sin(time * 4.5);
-      moonRef.current.position.z = 0.08 * Math.sin(time * 4.5);
+      moonRef.current.position.x = 0.22 * Math.cos(time * 2.2);
+      moonRef.current.position.y = 0.22 * Math.sin(time * 2.2);
+      moonRef.current.position.z = 0.08 * Math.sin(time * 2.2);
+    }
+    // Rotate Earth clouds independently
+    if (earthCloudsRef.current) {
+      earthCloudsRef.current.rotation.y = time * 0.25;
     }
 
-    // 3. Orbit Planet 3 group (Outer)
+    // 3. Slow Orbit Planet 3 group (Outer)
     if (p3GroupRef.current) {
-      p3GroupRef.current.position.x = 2.4 * Math.cos(time * 0.7);
-      p3GroupRef.current.position.y = 2.4 * Math.sin(time * 0.7);
-      p3GroupRef.current.rotation.y = time * 0.8;
+      p3GroupRef.current.position.x = 2.4 * Math.cos(time * 0.25);
+      p3GroupRef.current.position.y = 2.4 * Math.sin(time * 0.25);
+      p3GroupRef.current.rotation.y = time * 0.4;
     }
 
     // 4. Heat particles (Solar Flares) radiating outward
@@ -260,15 +265,13 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
             <torusGeometry args={[1.2, 0.005, 8, 64]} />
             <meshStandardMaterial color="#6B6B80" transparent opacity={0.12} />
           </mesh>
-          {/* Mercury/Venus-like Planet */}
-          <mesh ref={p1Ref}>
+          {/* Mercury/Venus-like Rocky Planet */}
+          <mesh ref={p1Ref} rotation={[0, 0, 0.05]}>
             <sphereGeometry args={[0.065, 16, 16]} />
             <meshStandardMaterial
-              color="#ffb347"
-              roughness={0.4}
-              metalness={0.6}
-              emissive="#ffb347"
-              emissiveIntensity={0.15}
+              color="#8c8c8c"
+              roughness={0.7}
+              metalness={0.3}
             />
           </mesh>
         </group>
@@ -281,27 +284,35 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
             <meshStandardMaterial color="#6B6B80" transparent opacity={0.12} />
           </mesh>
           {/* Earth-like Planet + Orbiting Moon Group */}
-          <group ref={p2GroupRef}>
+          <group ref={p2GroupRef} rotation={[0, 0, 0.41]}>
             {/* Blue Planet */}
             <mesh>
               <sphereGeometry args={[0.09, 16, 16]} />
               <meshStandardMaterial
-                color="#00aaff"
+                color="#1e3a8a"
                 roughness={0.2}
                 metalness={0.8}
-                emissive="#0066ff"
-                emissiveIntensity={0.15}
               />
             </mesh>
             {/* Earth Atmosphere Glow */}
             <mesh>
-              <sphereGeometry args={[0.098, 16, 16]} />
+              <sphereGeometry args={[0.096, 16, 16]} />
               <meshBasicMaterial
                 color="#00D4FF"
                 transparent
                 opacity={0.35}
                 blending={THREE.AdditiveBlending}
                 depthWrite={false}
+              />
+            </mesh>
+            {/* Earth Cloud Layer */}
+            <mesh ref={earthCloudsRef}>
+              <sphereGeometry args={[0.093, 16, 16]} />
+              <meshStandardMaterial
+                color="#ffffff"
+                transparent
+                opacity={0.4}
+                roughness={0.8}
               />
             </mesh>
             {/* Tiny Orbiting Moon */}
@@ -324,16 +335,14 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
             <meshStandardMaterial color="#6B6B80" transparent opacity={0.12} />
           </mesh>
           {/* Saturn Planet + Ring Group */}
-          <group ref={p3GroupRef}>
-            {/* Orange Planet */}
+          <group ref={p3GroupRef} rotation={[0, 0, 0.46]}>
+            {/* Pale Orange Saturn Planet */}
             <mesh>
               <sphereGeometry args={[0.08, 16, 16]} />
               <meshStandardMaterial
-                color="#ff6600"
-                roughness={0.3}
-                metalness={0.7}
-                emissive="#ff3300"
-                emissiveIntensity={0.1}
+                color="#e2e8f0"
+                roughness={0.6}
+                metalness={0.2}
               />
             </mesh>
             {/* Planetary Rings - Cassini Division */}
