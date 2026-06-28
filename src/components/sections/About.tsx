@@ -18,18 +18,9 @@ const About = () => {
           <div className="absolute w-60 h-60 rounded-full bg-[#6C63FF]/5 filter blur-3xl animate-pulse"></div>
           <div className="absolute w-48 h-48 rounded-full bg-[#00D4FF]/5 filter blur-3xl animate-pulse delay-500"></div>
 
-          {/* 3D Character (Desktop Only) */}
-          <div className="hidden md:block absolute inset-0 z-10 w-full h-full">
+          {/* 3D Character */}
+          <div className="absolute inset-0 z-10 w-full h-full">
             <CharacterModel view="about" />
-          </div>
-
-          {/* Static 3D character fallback (Mobile Only) */}
-          <div className="md:hidden relative z-10 w-[240px] h-auto pointer-events-none select-none">
-            <img
-              src="/developer_3d.png"
-              alt="3D Developer close-up portrait"
-              className="w-full h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]"
-            />
           </div>
         </div>
       </div>

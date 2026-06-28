@@ -13,43 +13,57 @@ import {
 import setAnimations from "./utils/animationUtils";
 
 const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasDiv = useRef<HTMLDivElement | null>(null);
   const hoverDivRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef(new THREE.Scene());
   const { setLoading } = useLoading();
-  
+
+  const [inView, setInView] = useState(false);
+  const [loadingModel, setLoadingModel] = useState(true);
   const [hasWebGL, setHasWebGL] = useState(true);
   const [character, setChar] = useState<THREE.Object3D | null>(null);
-  const isVisibleRef = useRef(true);
 
-  // Intersection Observer to pause rendering when canvas is off-screen
+  // 1. Intersection Observer to conditionally mount WebGL Canvas
   useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        isVisibleRef.current = entry.isIntersecting;
+        setInView(entry.isIntersecting);
       },
-      { threshold: 0.05 }
+      {
+        threshold: 0.01,
+        rootMargin: "150px", // Load 150px before entering viewport to prevent delay
+      }
     );
-    if (canvasDiv.current) {
-      observer.observe(canvasDiv.current);
-    }
+    observer.observe(el);
     return () => observer.disconnect();
   }, []);
 
+  // 2. Initialize WebGL scene only when inView is true
   useEffect(() => {
+    if (!inView) {
+      // Clean up character state when out of view
+      setChar(null);
+      setLoadingModel(true);
+      return;
+    }
+
     if (canvasDiv.current) {
       let rect = canvasDiv.current.getBoundingClientRect();
       let container = { width: rect.width, height: rect.height };
       const aspect = container.width / container.height;
       const scene = sceneRef.current;
-      
+
       const isMobile = window.innerWidth < 768;
       let renderer: THREE.WebGLRenderer | undefined;
 
       try {
         renderer = new THREE.WebGLRenderer({
           alpha: true,
-          antialias: !isMobile, // Disable antialiasing on mobile to speed up rendering
+          antialias: !isMobile,
         });
         renderer.setSize(container.width, container.height);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2.0));
@@ -57,8 +71,9 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
         renderer.toneMappingExposure = 1;
         canvasDiv.current.appendChild(renderer.domElement);
       } catch (e) {
-        console.warn("WebGL creation failed, falling back to static image:", e);
+        console.warn("WebGL creation failed, showing static fallback:", e);
         setHasWebGL(false);
+        setLoadingModel(false);
         setLoading(100);
         return;
       }
@@ -78,7 +93,6 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       let mixer: THREE.AnimationMixer;
 
       const clock = new THREE.Clock();
-
       const light = setLighting(scene);
       const { loadCharacter } = setCharacter(renderer, scene, camera);
 
@@ -88,21 +102,18 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
             const animations = setAnimations(gltf);
             hoverDivRef.current && animations.hover(gltf, hoverDivRef.current);
             mixer = animations.mixer;
-            let character = gltf.scene;
+            let charScene = gltf.scene;
 
             if (view === "about") {
-              // Portrait close-up view facing camera slightly
-              character.rotation.set(0, 0.7, 0);
+              charScene.rotation.set(0, 0.7, 0);
             } else {
-              // Align to typing desk immediately
-              character.rotation.set(0.12, 0.92, 0);
-              const neckBone = character.getObjectByName("spine005");
+              charScene.rotation.set(0.12, 0.92, 0);
+              const neckBone = charScene.getObjectByName("spine005");
               if (neckBone) {
                 neckBone.rotation.x = 0.6;
               }
 
-              // Force monitor screen glow materials to be visible instantly
-              character.traverse((child: any) => {
+              charScene.traverse((child: any) => {
                 if (child.name === "screenlight" && child.material) {
                   child.material.transparent = true;
                   child.material.opacity = 1;
@@ -114,13 +125,13 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
               });
             }
 
-            setChar(character);
-            scene.add(character);
-            headBone = character.getObjectByName("spine006") || null;
-            screenLight = character.getObjectByName("screenlight") || null;
+            setChar(charScene);
+            scene.add(charScene);
+            headBone = charScene.getObjectByName("spine006") || null;
+            screenLight = charScene.getObjectByName("screenlight") || null;
+            setLoadingModel(false);
             setLoading(100);
 
-            // Turn on lights and begin animations
             light.turnOnLights();
             if (view === "about") {
               const blink = gltf.animations.find((clip) => clip.name === "Blink");
@@ -133,14 +144,15 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
 
             window.addEventListener("resize", () => {
               if (renderer) {
-                handleResize(renderer, camera, canvasDiv, character);
+                handleResize(renderer, camera, canvasDiv, charScene);
               }
             });
           }
         })
         .catch((err) => {
-          console.error("Failed to load character, falling back to static:", err);
+          console.error("Error loading character model, falling back to static image:", err);
           setHasWebGL(false);
+          setLoadingModel(false);
           setLoading(100);
         });
 
@@ -150,6 +162,7 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       const onMouseMove = (event: MouseEvent) => {
         handleMouseMove(event, (x, y) => (mouse = { x, y }));
       };
+      
       let debounce: number | undefined;
       const onTouchStart = (event: TouchEvent) => {
         const element = event.target as HTMLElement;
@@ -177,10 +190,6 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       let animationFrameId: number;
       const animate = () => {
         animationFrameId = requestAnimationFrame(animate);
-        
-        // PAUSE loops when container is scrolled out of view to ensure 60fps scrolling
-        if (!isVisibleRef.current) return;
-
         if (headBone) {
           handleHeadRotation(
             headBone,
@@ -224,31 +233,31 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
         }
       };
     }
-  }, [view]);
-
-  if (!hasWebGL) {
-    return (
-      <div className="character-container flex items-center justify-center">
-        <div className="w-[240px] md:w-[320px] h-auto pointer-events-none select-none relative z-10">
-          <img
-            src="/developer_3d.png"
-            alt="3D Developer fallback"
-            className="w-full h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]"
-          />
-        </div>
-      </div>
-    );
-  }
+  }, [inView, view]);
 
   return (
-    <>
-      <div className="character-container">
-        <div className="character-model" ref={canvasDiv}>
-          <div className="character-rim"></div>
-          <div className="character-hover" ref={hoverDivRef}></div>
+    <div ref={containerRef} className="character-container relative w-full h-full flex items-center justify-center">
+      {/* 1. Purple Circle Rim Backdrop (Always Visible for Visual Continuity) */}
+      <div className="character-rim"></div>
+
+      {/* 2. Static Fallback/Placeholder Image (Visible during decryption and load) */}
+      {(!hasWebGL || loadingModel) && (
+        <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none select-none">
+          <img
+            src="/developer_3d.png"
+            alt="3D Coder character placeholder"
+            className="w-[240px] md:w-[320px] h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-opacity duration-500 opacity-100"
+          />
         </div>
-      </div>
-    </>
+      )}
+
+      {/* 3. 3D WebGL Canvas Container (Mounted only when inView is true) */}
+      {hasWebGL && inView && (
+        <div className="character-model w-full h-full absolute inset-0 z-20" ref={canvasDiv}>
+          <div className="character-hover w-full h-full" ref={hoverDivRef}></div>
+        </div>
+      )}
+    </div>
   );
 };
 
