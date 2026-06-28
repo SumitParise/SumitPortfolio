@@ -16,33 +16,15 @@ function WhatIDo3DVisual() {
     }
   });
 
-  // Create a grid of points
-  const count = 120;
-  const positions = new Float32Array(count * 3);
-  for (let i = 0; i < count; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 3;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 3;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 3;
-  }
-
   return (
     <points ref={pointsRef}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-          count={count}
-          array={positions}
-          itemSize={3}
-        />
-      </bufferGeometry>
+      <icosahedronGeometry args={[1.4, 2]} />
       <pointsMaterial
         color="#6C63FF"
-        size={0.08}
+        size={0.06}
         sizeAttenuation={true}
         transparent
         opacity={0.5}
-        depthWrite={false}
       />
     </points>
   );

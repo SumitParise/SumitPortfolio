@@ -30,25 +30,12 @@ function DualRotatingSphere() {
       innerSphereRef.current.scale.set(scale, scale, scale);
     }
 
-    // Dust particles
+    // Outer particle shell rotation
     if (pointsRef.current) {
-      pointsRef.current.rotation.y = -time * 0.02;
+      pointsRef.current.rotation.y = -time * 0.03;
+      pointsRef.current.rotation.x = time * 0.01;
     }
   });
-
-  const count = 400;
-  const positions = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) {
-      const r = 2.8 + Math.random() * 4.0;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-      pos[i * 3 + 2] = r * Math.cos(phi);
-    }
-    return pos;
-  }, []);
 
   return (
     <group>
@@ -64,23 +51,15 @@ function DualRotatingSphere() {
         <meshBasicMaterial color="#00D4FF" wireframe transparent opacity={0.3} />
       </mesh>
       
-      {/* Surrounding Particles */}
+      {/* Surrounding Particles (using standard sphereGeometry to prevent binding crashes) */}
       <points ref={pointsRef}>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[positions, 3]}
-            count={positions.length / 3}
-            array={positions}
-            itemSize={3}
-          />
-        </bufferGeometry>
+        <sphereGeometry args={[3.2, 20, 20]} />
         <pointsMaterial
           color="#00D4FF"
-          size={0.06}
+          size={0.04}
           sizeAttenuation={true}
           transparent
-          opacity={0.6}
+          opacity={0.5}
           depthWrite={false}
         />
       </points>
