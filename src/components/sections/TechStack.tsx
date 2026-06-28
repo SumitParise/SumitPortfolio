@@ -122,17 +122,17 @@ function ScrollingRoad() {
       {/* Main road surface */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
         <planeGeometry args={[9, 120]} />
-        <meshStandardMaterial color="#060609" roughness={0.95} />
+        <meshStandardMaterial color="#0b0b0f" roughness={0.9} />
       </mesh>
 
       {/* Sidewalk boundary curbs */}
       <mesh position={[-2.8, 0.05, 0]} receiveShadow>
         <boxGeometry args={[0.15, 0.1, 120]} />
-        <meshStandardMaterial color="#1a1a24" roughness={0.8} />
+        <meshStandardMaterial color="#2d2d3a" roughness={0.7} />
       </mesh>
       <mesh position={[2.8, 0.05, 0]} receiveShadow>
         <boxGeometry args={[0.15, 0.1, 120]} />
-        <meshStandardMaterial color="#1a1a24" roughness={0.8} />
+        <meshStandardMaterial color="#2d2d3a" roughness={0.7} />
       </mesh>
 
       {/* Scrolling central divider dashed lines */}
@@ -142,7 +142,7 @@ function ScrollingRoad() {
           return (
             <mesh key={idx} position={[0, 0.02, z]} rotation={[-Math.PI / 2, 0, 0]}>
               <planeGeometry args={[0.12, 1.2]} />
-              <meshBasicMaterial color="#00D4FF" transparent opacity={0.3} />
+              <meshBasicMaterial color="#00D4FF" transparent opacity={0.5} />
             </mesh>
           );
         })}
@@ -199,11 +199,25 @@ function TechBuildings({ skills, colorMap }: { skills: string[]; colorMap: Recor
 
         return (
           <group ref={b.ref} key={idx} position={[b.x, b.height / 2, b.z]}>
-            {/* Building Mesh */}
+            {/* Building solid structure (Lighter color to reflect light) */}
             <mesh castShadow receiveShadow>
               <boxGeometry args={[1.8, b.height, 1.8]} />
-              <meshStandardMaterial color="#101017" roughness={0.8} metalness={0.15} />
+              <meshStandardMaterial color="#1c1c27" roughness={0.5} metalness={0.3} />
             </mesh>
+
+            {/* Glowing Brand-Colored Skyscraper Outline */}
+            <mesh>
+              <boxGeometry args={[1.82, b.height + 0.02, 1.82]} />
+              <meshBasicMaterial color={color} wireframe transparent opacity={0.3} />
+            </mesh>
+
+            {/* Localized neon emission pointLight to illuminate building facade & street */}
+            <pointLight
+              position={[b.x < 0 ? 0.95 : -0.95, 0, 0]}
+              intensity={2.8}
+              distance={6.5}
+              color={color}
+            />
 
             {/* Glowing neon backdrop backing the billboard */}
             <mesh
@@ -211,7 +225,7 @@ function TechBuildings({ skills, colorMap }: { skills: string[]; colorMap: Recor
               rotation={[0, b.x < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
             >
               <planeGeometry args={[1.6, 0.9]} />
-              <meshBasicMaterial color={color} transparent opacity={0.1} />
+              <meshBasicMaterial color={color} transparent opacity={0.2} />
             </mesh>
 
             {/* 3D Projected Interactive Billboard Tag */}
@@ -228,7 +242,7 @@ function TechBuildings({ skills, colorMap }: { skills: string[]; colorMap: Recor
                   backgroundColor: '#0a0a0f',
                   borderColor: color,
                   color: color,
-                  boxShadow: `0 0 15px ${color}35`
+                  boxShadow: `0 0 15px ${color}50`
                 }}
               >
                 <div className="text-xs font-black tracking-widest truncate">{b.name.toUpperCase()}</div>
@@ -301,10 +315,10 @@ const TechStack = () => {
           camera={{ position: [0, 2.0, 5.8], fov: 45 }}
           gl={{ alpha: true, antialias: true }}
         >
-          <ambientLight intensity={0.65} />
+          <ambientLight intensity={1.1} />
           {/* Neon sky pink background light */}
-          <directionalLight position={[0, 10, -10]} intensity={1.0} color="#6C63FF" />
-          <spotLight position={[0, 20, 20]} penumbra={1} intensity={1.5} castShadow />
+          <directionalLight position={[0, 12, -10]} intensity={1.5} color="#6C63FF" />
+          <spotLight position={[0, 20, 20]} penumbra={1} intensity={2.0} castShadow />
           
           <ScrollingRoad />
           <CyberCar />
