@@ -11,7 +11,7 @@ import {
   handleTouchMove,
 } from "./utils/mouseUtils";
 import setAnimations from "./utils/animationUtils";
-const Scene = () => {
+const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
   const canvasDiv = useRef<HTMLDivElement | null>(null);
   const hoverDivRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef(new THREE.Scene());
@@ -37,7 +37,11 @@ const Scene = () => {
 
       const camera = new THREE.PerspectiveCamera(14.5, aspect, 0.1, 1000);
       camera.position.z = 10;
-      camera.position.set(0, 8.4, 75);
+      if (view === "about") {
+        camera.position.set(0, 13.1, 22.0);
+      } else {
+        camera.position.set(0, 8.4, 75.0);
+      }
       camera.zoom = 1.1;
       camera.updateProjectionMatrix();
 
@@ -57,24 +61,29 @@ const Scene = () => {
           mixer = animations.mixer;
           let character = gltf.scene;
 
-          // Align to typing desk immediately
-          character.rotation.set(0.12, 0.92, 0);
-          const neckBone = character.getObjectByName("spine005");
-          if (neckBone) {
-            neckBone.rotation.x = 0.6;
-          }
+          if (view === "about") {
+            // Portrait close-up view facing camera slightly
+            character.rotation.set(0, 0.7, 0);
+          } else {
+            // Align to typing desk immediately
+            character.rotation.set(0.12, 0.92, 0);
+            const neckBone = character.getObjectByName("spine005");
+            if (neckBone) {
+              neckBone.rotation.x = 0.6;
+            }
 
-          // Force monitor screen glow materials to be visible instantly
-          character.traverse((child: any) => {
-            if (child.name === "screenlight" && child.material) {
-              child.material.transparent = true;
-              child.material.opacity = 1;
-            }
-            if (child.isMesh && child.material && child.material.name === "Material.027") {
-              child.material.transparent = true;
-              child.material.opacity = 1;
-            }
-          });
+            // Force monitor screen glow materials to be visible instantly
+            character.traverse((child: any) => {
+              if (child.name === "screenlight" && child.material) {
+                child.material.transparent = true;
+                child.material.opacity = 1;
+              }
+              if (child.isMesh && child.material && child.material.name === "Material.027") {
+                child.material.transparent = true;
+                child.material.opacity = 1;
+              }
+            });
+          }
 
           setChar(character);
           scene.add(character);

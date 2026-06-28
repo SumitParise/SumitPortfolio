@@ -1,38 +1,9 @@
-import { useRef, useState, useEffect } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import { PORTFOLIO } from '../../data/portfolio';
-
-// 3D Visual for the About section
-function About3DVisual() {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-    if (meshRef.current) {
-      meshRef.current.rotation.x = time * 0.15;
-      meshRef.current.rotation.y = time * 0.2;
-      meshRef.current.position.y = Math.sin(time * 0.6) * 0.15;
-    }
-  });
-
-  return (
-    <mesh ref={meshRef}>
-      <dodecahedronGeometry args={[1.5, 0]} />
-      <meshBasicMaterial color="#00D4FF" wireframe transparent opacity={0.25} />
-    </mesh>
-  );
-}
+import CharacterModel from '../Character';
 
 const About = () => {
   const sectionRef = useScrollReveal<HTMLDivElement>();
-  const [showCanvas, setShowCanvas] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowCanvas(true), 1500);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <section
@@ -41,19 +12,24 @@ const About = () => {
       className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto flex flex-col md:flex-row gap-12 md:gap-20 items-center justify-between overflow-hidden"
     >
       {/* 3D Visual Column (Left) */}
-      <div className="reveal-item w-full md:w-1/2 flex items-center justify-center h-[300px] md:h-[400px]">
+      <div className="reveal-item w-full md:w-1/2 flex items-center justify-center h-[400px] md:h-[500px]">
         <div className="relative w-full h-full flex items-center justify-center">
           {/* Moving background glow */}
-          <div className="absolute w-60 h-60 rounded-full bg-[#6C63FF]/10 filter blur-3xl animate-pulse"></div>
-          <div className="absolute w-48 h-48 rounded-full bg-[#00D4FF]/10 filter blur-3xl animate-pulse delay-500"></div>
+          <div className="absolute w-60 h-60 rounded-full bg-[#6C63FF]/5 filter blur-3xl animate-pulse"></div>
+          <div className="absolute w-48 h-48 rounded-full bg-[#00D4FF]/5 filter blur-3xl animate-pulse delay-500"></div>
 
-          <div className="w-full h-full max-w-[350px]">
-            {showCanvas && (
-              <Canvas camera={{ position: [0, 0, 4.5], fov: 60 }}>
-                <ambientLight intensity={0.5} />
-                <About3DVisual />
-              </Canvas>
-            )}
+          {/* 3D Character (Desktop Only) */}
+          <div className="hidden md:block absolute inset-0 z-10 w-full h-full">
+            <CharacterModel view="about" />
+          </div>
+
+          {/* Static 3D character fallback (Mobile Only) */}
+          <div className="md:hidden relative z-10 w-[240px] h-auto pointer-events-none select-none">
+            <img
+              src="/developer_3d.png"
+              alt="3D Developer close-up portrait"
+              className="w-full h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]"
+            />
           </div>
         </div>
       </div>
