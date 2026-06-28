@@ -43,8 +43,8 @@ const setCharacter = (
                   mat.vertexColors = false;
 
                   if (child.name === "BODY.SHIRT") {
-                    // Sleek dark gray hoodie
-                    mat.color.set("#1e1e2f");
+                    // Sleek matte black hoodie
+                    mat.color.set("#050505");
                     mat.roughness = 0.85;
                   } else if (child.name === "Cube.002") {
                     // Vibrant neon violet cap (brand accent)

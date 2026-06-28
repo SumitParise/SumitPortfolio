@@ -91,9 +91,16 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
           screenLight = character.getObjectByName("screenlight") || null;
           setLoading(100);
 
-          // Turn on lights and begin typing intro loop immediately
+          // Turn on lights and begin animations
           light.turnOnLights();
-          animations.startIntro();
+          if (view === "about") {
+            const blink = gltf.animations.find((clip) => clip.name === "Blink");
+            if (blink) {
+              mixer.clipAction(blink).play();
+            }
+          } else {
+            animations.startIntro();
+          }
 
           window.addEventListener("resize", () =>
             handleResize(renderer, camera, canvasDiv, character)
