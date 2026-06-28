@@ -31,29 +31,35 @@ const TechStack = () => {
     'GraphQL': 'DEVELOP',
   };
 
-  // Staggered delay for each building to pass sequentially
-  const scrollDuration = 22; // total loop duration in seconds
-  const streetItems = useMemo(() => {
-    return skills.map((skill, idx) => {
-      const category = skillCategories[skill] || 'DEVELOP';
-      // Alternate left/right, heights, and styles
-      const heightClass = idx % 3 === 0 ? 'h-32 md:h-48' : idx % 3 === 1 ? 'h-40 md:h-56' : 'h-48 md:h-64';
-      const buildingStyle = idx % 2 === 0 ? 'rounded-t-lg' : 'rounded-t-none';
-      return {
-        name: skill,
-        category,
-        delay: (idx * (scrollDuration / skills.length)),
-        heightClass,
-        buildingStyle
-      };
-    });
-  }, [skills]);
+  const colorMap: Record<string, string> = {
+    'React': '#00d8ff',
+    'TypeScript': '#3178c6',
+    'Node.js': '#339933',
+    'Python': '#3776ab',
+    'Three.js': '#fbbf24',
+    'GSAP': '#88ce02',
+    'REST APIs': '#ff6c37',
+    'Git': '#f05032',
+    'Docker': '#2496ed',
+    'Tailwind CSS': '#38bdf8',
+    'HTML5/CSS3': '#e34f26',
+    'FastAPI': '#009688',
+    'Next.js': '#a855f7',
+    'MongoDB': '#10b981',
+    'PostgreSQL': '#3b82f6',
+    'AWS': '#f97316',
+    'Express': '#6b7280',
+    'GraphQL': '#ec4899',
+  };
 
-  // Birds config with staggered loops
+  // Double the tech list to achieve a seamless conveyor belt marquee loop
+  const doubledSkills = useMemo(() => [...skills, ...skills], [skills]);
+
+  // Birds configuration
   const birds = [
-    { delay: 0, top: '15%', size: 'scale-[0.6]', duration: 16 },
-    { delay: 4, top: '25%', size: 'scale-[0.5]', duration: 20 },
-    { delay: 9, top: '10%', size: 'scale-[0.7]', duration: 14 }
+    { top: '12%', size: 'scale-[0.55]', delay: '0s', duration: '18s' },
+    { top: '22%', size: 'scale-[0.45]', delay: '5s', duration: '22s' },
+    { top: '15%', size: 'scale-[0.65]', delay: '10s', duration: '15s' }
   ];
 
   const animationStyle = {
@@ -67,56 +73,60 @@ const TechStack = () => {
       ref={containerRef}
       className="py-20 md:py-36 px-6 md:px-12 max-w-6xl mx-auto overflow-hidden relative select-none"
     >
-      {/* Scoped Keyframes for Parallax, Flapping, and Pedaling */}
+      {/* Conveyor Marquee, Pedaling, and Bobbing CSS */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes scroll-scenery {
+        @keyframes scroll-scenery-loop {
           0% { transform: translate3d(0, 0, 0); }
           100% { transform: translate3d(-50%, 0, 0); }
-        }
-        @keyframes building-pass {
-          0% { transform: translate3d(600px, 0, 0); opacity: 0; }
-          4% { opacity: 1; }
-          96% { opacity: 1; }
-          100% { transform: translate3d(-1000px, 0, 0); opacity: 0; }
         }
         @keyframes wing-flap {
           0%, 100% { transform: scaleY(1.0); }
           50% { transform: scaleY(-0.7); }
         }
-        @keyframes bird-fly {
+        @keyframes bird-fly-across {
           0% { transform: translate3d(600px, 0, 0); }
           100% { transform: translate3d(-1000px, 0, 0); }
         }
         @keyframes rider-pedal-bob {
           0%, 100% { transform: translate3d(0, 0, 0); }
-          50% { transform: translate3d(0, -2.5px, 0); }
+          50% { transform: translate3d(0, -3px, 0); }
         }
-        @keyframes spinner {
+        @keyframes shadow-shrink {
+          0%, 100% { transform: scale(1.0); opacity: 0.25; }
+          50% { transform: scale(0.9); opacity: 0.18; }
+        }
+        @keyframes spinner-wheel {
           from { transform: rotate(0deg); }
-          to { transform: rotate(36deg); }
+          to { transform: rotate(360deg); }
         }
 
         .animate-scroll-clouds {
-          animation: scroll-scenery calc(48s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery-loop calc(46s * var(--speed-multiplier)) linear infinite;
         }
         .animate-scroll-hills {
-          animation: scroll-scenery calc(28s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery-loop calc(28s * var(--speed-multiplier)) linear infinite;
+        }
+        .animate-scroll-street-conveyor {
+          animation: scroll-scenery-loop calc(30s * var(--speed-multiplier)) linear infinite;
         }
         .animate-scroll-road {
-          animation: scroll-scenery calc(1.5s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery-loop calc(1.5s * var(--speed-multiplier)) linear infinite;
         }
         .animate-rider-bob {
-          animation: rider-pedal-bob calc(0.4s * var(--speed-multiplier)) ease-in-out infinite;
+          animation: rider-pedal-bob calc(0.42s * var(--speed-multiplier)) ease-in-out infinite;
+        }
+        .animate-shadow-bob {
+          animation: shadow-shrink calc(0.42s * var(--speed-multiplier)) ease-in-out infinite;
         }
         .animate-wing-flap {
-          animation: wing-flap 0.35s ease-in-out infinite;
+          animation: wing-flap 0.32s ease-in-out infinite;
           transform-origin: center;
         }
         .animate-bird-fly {
-          animation: bird-fly calc(var(--fly-duration) * var(--speed-multiplier)) linear infinite;
+          animation: bird-fly-across calc(var(--fly-duration) * var(--speed-multiplier)) linear infinite;
         }
-        .animate-building {
-          animation: building-pass calc(${scrollDuration}s * var(--speed-multiplier)) linear infinite;
+        .animate-wheel-spin {
+          animation: spinner-wheel calc(0.35s * var(--speed-multiplier)) linear infinite;
         }
       `}} />
 
@@ -164,8 +174,8 @@ const TechStack = () => {
             style={{
               ...animationStyle,
               top: b.top,
-              animationDelay: `${b.delay * (1 / speed)}s`,
-              '--fly-duration': `${b.duration}s`,
+              animationDelay: b.delay,
+              '--fly-duration': b.duration,
             } as React.CSSProperties}
           >
             <svg viewBox="0 0 32 16" className="w-full h-full fill-current text-neutral-800 opacity-60">
@@ -198,7 +208,7 @@ const TechStack = () => {
 
         {/* Green Hills (Parallax 2) */}
         <div
-          className="absolute inset-x-0 bottom-[65px] h-24 flex whitespace-nowrap pointer-events-none opacity-80 animate-scroll-hills animate-scroll-hills"
+          className="absolute inset-x-0 bottom-[65px] h-24 flex whitespace-nowrap pointer-events-none opacity-80 animate-scroll-hills"
           style={animationStyle}
         >
           <div className="flex shrink-0 w-full" style={{ color: isNight ? '#241442' : '#34d399' }}>
@@ -213,66 +223,69 @@ const TechStack = () => {
           </div>
         </div>
 
-        {/* Scenery Layer: Tech Buildings & Roadside Trees */}
-        <div className="absolute inset-x-0 bottom-[60px] h-64 z-20 pointer-events-none">
-          {streetItems.map((b, idx) => {
-            const isDevelop = b.category === 'DEVELOP';
+        {/* Conveyor Marquee Scenery Layer: Tech Buildings & Roadside Trees with clean gaps */}
+        <div
+          className="absolute bottom-[60px] h-64 z-20 flex flex-row items-end gap-24 md:gap-32 w-[200%] whitespace-nowrap animate-scroll-street-conveyor px-8"
+          style={animationStyle}
+        >
+          {doubledSkills.map((skill, idx) => {
+            const isDevelop = skillCategories[skill] === 'DEVELOP';
+            const color = colorMap[skill] || '#6C63FF';
+            // Alternate building heights and roof profiles
+            const heightClass = idx % 3 === 0 ? 'h-36 md:h-52' : idx % 3 === 1 ? 'h-44 md:h-60' : 'h-52 md:h-72';
+            const buildingStyle = idx % 2 === 0 ? 'rounded-t-lg' : 'rounded-t-none';
+
             return (
               <div
                 key={idx}
-                className="absolute bottom-0 left-0 w-40 pointer-events-auto cursor-pointer animate-building flex flex-col justify-end items-center select-none"
-                style={{
-                  ...animationStyle,
-                  animationDelay: `${b.delay * (1 / speed)}s`,
-                }}
+                className="flex items-end gap-10 shrink-0 select-none pointer-events-auto cursor-pointer"
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
               >
-                <div className="flex items-end justify-center w-full relative">
-                  {/* Building Block */}
+                {/* Building Frame */}
+                <div
+                  className={`w-32 md:w-36 ${heightClass} ${buildingStyle} border-t-2 border-x border-white/10 p-3 flex flex-col justify-between relative shadow-lg hover:border-white/30 hover:scale-[1.02] transition-all duration-300`}
+                  style={{
+                    backgroundColor: isNight ? '#11111a' : '#eae5ec',
+                  }}
+                >
+                  {/* Skyscraper Windows Grid */}
+                  <div className="grid grid-cols-3 gap-2.5 w-full opacity-65">
+                    {[...Array(6)].map((_, wIdx) => (
+                      <div
+                        key={wIdx}
+                        className={`w-3.5 h-2.5 rounded-sm transition-all duration-500 ${
+                          isNight 
+                            ? (idx + wIdx) % 3 === 0 ? 'bg-yellow-200 shadow-md' : 'bg-neutral-800'
+                            : 'bg-white border border-neutral-300'
+                        }`}
+                      ></div>
+                    ))}
+                  </div>
+
+                  {/* Storefront Signboard Banner */}
                   <div
-                    className={`w-28 md:w-32 ${b.heightClass} ${b.buildingStyle} border-t-2 border-x border-white/10 p-3 flex flex-col justify-between relative shadow-lg group transition-all duration-300`}
+                    className="w-full py-2 rounded border text-center font-heading font-black text-[10px] md:text-xs tracking-wider shadow-md"
                     style={{
-                      backgroundColor: isNight ? '#11111a' : '#eae5ec', // Dark building at night, light building at day
+                      backgroundColor: '#0a0a0f',
+                      borderColor: color,
+                      color: color,
+                      boxShadow: `0 0 10px ${color}35`
                     }}
                   >
-                    {/* Skyscraper Lit Window Grids */}
-                    <div className="grid grid-cols-3 gap-2 w-full opacity-60">
-                      {[...Array(6)].map((_, wIdx) => (
-                        <div
-                          key={wIdx}
-                          className={`w-3.5 h-2.5 rounded-sm transition-all duration-500 ${
-                            isNight 
-                              ? (idx + wIdx) % 3 === 0 ? 'bg-yellow-200 shadow-md' : 'bg-neutral-800'
-                              : 'bg-white border border-neutral-300'
-                          }`}
-                        ></div>
-                      ))}
-                    </div>
-
-                    {/* Storefront / Billboard Neon Sign Banner */}
-                    <div
-                      className="w-full py-1.5 rounded border text-center font-heading font-black text-[10px] md:text-xs tracking-wider shadow-md transition-colors"
-                      style={{
-                        backgroundColor: '#0a0a0f',
-                        borderColor: isDevelop ? '#6C63FF' : '#00D4FF',
-                        color: isDevelop ? '#6C63FF' : '#00D4FF',
-                      }}
-                    >
-                      {b.name.toUpperCase()}
-                      <span className="block text-[6px] font-mono opacity-60 tracking-widest mt-0.5">
-                        {isDevelop ? 'DEV // BACK' : 'DSN // FRONT'}
-                      </span>
-                    </div>
+                    {skill.toUpperCase()}
+                    <span className="block text-[6px] font-mono opacity-60 tracking-widest mt-0.5">
+                      {isDevelop ? 'DEV // BACK' : 'DSN // FRONT'}
+                    </span>
                   </div>
+                </div>
 
-                  {/* Roadside Green Tree positioned next to building */}
-                  <div className="absolute bottom-0 right-[-16px] w-6 flex flex-col items-center pointer-events-none">
-                    {/* Tree Canopy */}
-                    <div className={`w-8 h-8 rounded-full border border-white/5 shadow-md ${isNight ? 'bg-green-950' : 'bg-green-500'}`}></div>
-                    {/* Tree Trunk */}
-                    <div className="w-1 h-3 bg-amber-800"></div>
-                  </div>
+                {/* Roadside Green Tree (Spaced between buildings) */}
+                <div className="flex flex-col items-center pointer-events-none pb-0.5">
+                  {/* Canopy */}
+                  <div className={`w-8 h-8 rounded-full border border-white/5 shadow-md ${isNight ? 'bg-green-950' : 'bg-green-500'}`}></div>
+                  {/* Trunk */}
+                  <div className="w-1 h-3 bg-amber-800"></div>
                 </div>
               </div>
             );
@@ -296,16 +309,20 @@ const TechStack = () => {
           </div>
         </div>
 
-        {/* Dynamic Vector SVG Cyclist (Smiling pedaling rider) */}
+        {/* Dynamic Vector SVG Cyclist (Smiling pedaling rider with shadow & light) */}
         <div
           className={`absolute left-[18%] bottom-[22px] w-24 md:w-28 z-40 transition-all duration-300 select-none`}
         >
-          <svg className="w-full h-auto drop-shadow-md" viewBox="0 0 100 80" fill="none">
+          {/* Animated Ground Shadow */}
+          <div
+            className={`absolute bottom-[-2px] left-[15%] w-16 h-1.5 bg-black rounded-full filter blur-[1px] ${
+              !isPaused && 'animate-shadow-bob'
+            }`}
+          ></div>
+
+          <svg className="w-full h-auto drop-shadow-md relative z-10" viewBox="0 0 100 80" fill="none">
             {/* Front Wheel (Spinning) */}
-            <g style={{
-              transformOrigin: '25px 65px',
-              animation: !isPaused ? `spinner ${0.35 * (1 / speed)}s linear infinite` : 'none'
-            }}>
+            <g className={`${!isPaused && 'animate-wheel-spin'}`} style={{ transformOrigin: '25px 65px' }}>
               <circle cx="25" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
               <line x1="25" y1="54" x2="25" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
               <line x1="14" y1="65" x2="36" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
@@ -314,10 +331,7 @@ const TechStack = () => {
             </g>
 
             {/* Back Wheel (Spinning) */}
-            <g style={{
-              transformOrigin: '75px 65px',
-              animation: !isPaused ? `spinner ${0.35 * (1 / speed)}s linear infinite` : 'none'
-            }}>
+            <g className={`${!isPaused && 'animate-wheel-spin'}`} style={{ transformOrigin: '75px 65px' }}>
               <circle cx="75" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
               <line x1="75" y1="54" x2="75" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
               <line x1="64" y1="65" x2="86" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
@@ -336,6 +350,14 @@ const TechStack = () => {
             />
             {/* Handlebars & Seat */}
             <path d="M38 28 L32 28 M50 40 L45 40" stroke={isNight ? "#00D4FF" : "#6C63FF"} strokeWidth="2.0" fill="none" strokeLinecap="round" />
+
+            {/* Bicycle Basket & Front Light */}
+            <path d="M32 28 L27 28 L27 34 L32 34 Z" fill={isNight ? "#00D4FF" : "#6C63FF"} />
+            
+            {/* Headlight Beam (Cone of light in Night Mode) */}
+            {isNight && (
+              <polygon points="27,33 -10,38 -10,58" fill="url(#bike-light-cone)" fillOpacity="0.25" />
+            )}
 
             {/* Pedal Crank Center */}
             <circle cx="45" cy="65" r="2.5" fill="#888" />
@@ -358,6 +380,14 @@ const TechStack = () => {
               {/* Leg / Pedals */}
               <path d="M49 40 L44 51 L45 65" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" strokeLinecap="round" />
             </g>
+
+            {/* Gradients */}
+            <defs>
+              <linearGradient id="bike-light-cone" x1="27" y1="33" x2="-10" y2="48" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#ffea75" />
+                <stop offset="100%" stopColor="#ffea75" stopOpacity="0" />
+              </linearGradient>
+            </defs>
           </svg>
         </div>
       </div>
@@ -365,7 +395,7 @@ const TechStack = () => {
       {/* Interactive Controls Panel */}
       <div className="reveal-item max-w-lg mx-auto mt-8 p-6 bg-[#111118]/70 border border-[#1E1E2E] rounded-xl flex flex-col md:flex-row items-center justify-between gap-6 z-10 relative">
         
-        {/* Drive & Pause Buttons */}
+        {/* Commute & Daylight Buttons */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsPaused(!isPaused)}

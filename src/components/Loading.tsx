@@ -13,10 +13,10 @@ export const Loading = ({ onComplete }: LoadingProps) => {
   const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // 1. Simulate loading progress
+    // 1. Fast loading progress simulation (~350ms to load)
     let start = 0;
     const interval = setInterval(() => {
-      const step = Math.floor(Math.random() * 4) + 2;
+      const step = Math.floor(Math.random() * 6) + 4;
       start += step;
       if (start >= 100) {
         start = 100;
@@ -24,7 +24,7 @@ export const Loading = ({ onComplete }: LoadingProps) => {
         handleLoaded();
       }
       setPercent(start);
-    }, 45);
+    }, 25);
 
     return () => clearInterval(interval);
   }, []);
@@ -34,37 +34,44 @@ export const Loading = ({ onComplete }: LoadingProps) => {
     setTimeout(() => {
       setIsWelcome(true);
       
-      // 3. Expand the black pill like a mask to swallow the screen
+      // 3. Cinematic expand and slide transition
       setTimeout(() => {
+        const screen = screenRef.current;
         const pill = pillRef.current;
         const text = textRef.current;
         
-        if (pill) {
+        if (screen && pill) {
           const tl = gsap.timeline({
             onComplete: onComplete
           });
           
-          // Fade out the welcome text inside the pill first
+          // Fade out the welcome text inside the pill
           if (text) {
             tl.to(text, {
               opacity: 0,
-              duration: 0.25,
+              duration: 0.2,
               ease: 'power2.out'
             });
           }
           
-          // Expand the black pill radially to cover the screen
+          // Expand the black pill radially to swallow the screen
           const size = Math.max(window.innerWidth, window.innerHeight) * 3.0;
           tl.to(pill, {
             width: size,
             height: size,
             borderRadius: '50%',
-            duration: 0.95,
+            duration: 0.8,
             ease: 'power4.in',
-          }, '-=0.1');
+          }, '-=0.1')
+          // Cinematic Curtain Slide Reveal: Slide the whole curtain UP
+          .to(screen, {
+            y: '-100%',
+            duration: 0.95,
+            ease: 'power4.inOut'
+          }, '-=0.15');
         }
-      }, 1200);
-    }, 400);
+      }, 800);
+    }, 200);
   };
 
   return (
@@ -85,7 +92,7 @@ export const Loading = ({ onComplete }: LoadingProps) => {
         </div>
       </div>
 
-      {/* Massive Scrolling Marquee Background (Larger size) */}
+      {/* Massive Scrolling Marquee Background */}
       <div className="absolute top-1/2 left-0 w-full overflow-hidden -translate-y-1/2 pointer-events-none select-none">
         <div className="flex whitespace-nowrap animate-marquee font-heading font-black text-8xl md:text-[10rem] tracking-widest text-[#0a0a0f]/5 uppercase leading-none">
           <span>
@@ -97,7 +104,7 @@ export const Loading = ({ onComplete }: LoadingProps) => {
         </div>
       </div>
 
-      {/* Center Black Loading Pill (Larger scale with dynamic aura) */}
+      {/* Center Black Loading Pill (Dynamic aura) */}
       <div
         ref={pillRef}
         className="relative z-10 rounded-full bg-[#0a0a0f] border border-[#1E1E2E] shadow-[0_25px_60px_rgba(0,0,0,0.35)] flex items-center justify-center overflow-hidden"
@@ -106,7 +113,7 @@ export const Loading = ({ onComplete }: LoadingProps) => {
           height: '76px'
         }}
       >
-        {/* Dynamic Growing Glow Aura behind pill contents */}
+        {/* Dynamic Growing Glow Aura */}
         <div
           className="absolute inset-0 opacity-25 filter blur-md pointer-events-none transition-all duration-300"
           style={{
