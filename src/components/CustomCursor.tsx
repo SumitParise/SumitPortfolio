@@ -4,21 +4,23 @@ export const CustomCursor = () => {
   const dotRef = useRef<HTMLDivElement>(null);
   const ringRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [isTouchDevice, setIsTouchDevice] = useState(true);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
-    // Detect touch device
-    const checkTouchDevice = () => {
-      const match = window.matchMedia('(pointer: coarse)').matches;
-      setIsTouchDevice(match);
+    // Event-based touch device detection:
+    // We assume desktop mouse use by default. If a touch event is ever received, we switch to touch mode.
+    const onTouchStart = () => {
+      setIsTouchDevice(true);
     };
-    checkTouchDevice();
-
-    if (isTouchDevice) return;
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
 
     const dot = dotRef.current;
     const ring = ringRef.current;
-    if (!dot || !ring) return;
+    if (!dot || !ring) {
+      return () => {
+        window.removeEventListener('touchstart', onTouchStart);
+      };
+    }
 
     const mousePos = { x: -100, y: -100 };
     const dotPos = { x: -100, y: -100 };
@@ -29,7 +31,7 @@ export const CustomCursor = () => {
       mousePos.y = e.clientY;
     };
 
-    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
 
     // Event delegation for interactive elements hover
     const onMouseOver = (e: MouseEvent) => {
@@ -62,8 +64,8 @@ export const CustomCursor = () => {
       }
     };
 
-    window.addEventListener('mouseover', onMouseOver);
-    window.addEventListener('mouseout', onMouseOut);
+    window.addEventListener('mouseover', onMouseOver, { passive: true });
+    window.addEventListener('mouseout', onMouseOut, { passive: true });
 
     let animationId: number;
 
@@ -85,12 +87,13 @@ export const CustomCursor = () => {
     animationId = requestAnimationFrame(updateCursor);
 
     return () => {
+      window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseover', onMouseOver);
       window.removeEventListener('mouseout', onMouseOut);
       cancelAnimationFrame(animationId);
     };
-  }, [isTouchDevice]);
+  }, []); // Only run once on mount
 
   if (isTouchDevice) return null;
 
