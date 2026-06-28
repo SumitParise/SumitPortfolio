@@ -1,92 +1,139 @@
+import { useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import * as THREE from 'three';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import { PORTFOLIO } from '../../data/portfolio';
 
-const Skills = () => {
-  const containerRef = useScrollReveal<HTMLDivElement>({ stagger: 0.05 });
+// 3D Visual for the What I Do section
+function WhatIDo3DVisual() {
+  const pointsRef = useRef<THREE.Points>(null);
 
-  // Map skill strings from PORTFOLIO.skills into categories dynamically
-  const frontendSkills = PORTFOLIO.skills.filter(skill =>
-    ['react', 'typescript', 'three.js', 'gsap', 'tailwind css', 'html5/css3'].includes(skill.toLowerCase())
-  );
-
-  const backendSkills = PORTFOLIO.skills.filter(skill =>
-    ['node.js', 'python', 'fastapi', 'rest apis'].includes(skill.toLowerCase())
-  );
-
-  const devopsSkills = PORTFOLIO.skills.filter(skill =>
-    ['git', 'docker'].includes(skill.toLowerCase())
-  );
-
-  const categories = [
-    {
-      title: "Frontend Development",
-      skills: frontendSkills,
-      description: "Building interactive, performant, and responsive client-side interfaces."
-    },
-    {
-      title: "Backend & Systems",
-      skills: backendSkills,
-      description: "Designing scalable APIs, services, and handling server logic."
-    },
-    {
-      title: "Tools & DevOps",
-      skills: devopsSkills,
-      description: "Managing containerization, version control, and environments."
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    if (pointsRef.current) {
+      pointsRef.current.rotation.y = time * 0.1;
+      pointsRef.current.rotation.z = time * 0.05;
     }
-  ];
+  });
+
+  // Create a grid of points
+  const count = 120;
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    positions[i * 3] = (Math.random() - 0.5) * 3;
+    positions[i * 3 + 1] = (Math.random() - 0.5) * 3;
+    positions[i * 3 + 2] = (Math.random() - 0.5) * 3;
+  }
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          args={[positions, 3]}
+          count={count}
+          array={positions}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        color="#6C63FF"
+        size={0.08}
+        sizeAttenuation={true}
+        transparent
+        opacity={0.5}
+        depthWrite={false}
+      />
+    </points>
+  );
+}
+
+const Skills = () => {
+  const containerRef = useScrollReveal<HTMLDivElement>();
+
+  // Filter skills dynamically from PORTFOLIO.skills
+  const devSkills = PORTFOLIO.skills.filter(skill =>
+    ['react', 'typescript', 'node.js', 'python', 'rest apis', 'git', 'docker', 'tailwind css', 'fastapi'].includes(skill.toLowerCase())
+  );
+
+  const designSkills = PORTFOLIO.skills.filter(skill =>
+    ['three.js', 'gsap', 'html5/css3'].includes(skill.toLowerCase())
+  );
 
   return (
     <section
       id="skills"
       ref={containerRef}
-      className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto overflow-hidden"
+      className="py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto flex flex-col md:flex-row gap-12 md:gap-20 items-center justify-between overflow-hidden"
     >
-      <div className="flex flex-col items-center text-center mb-16">
-        <div className="flex items-center gap-2 mb-4 justify-center">
-          <span className="w-10 h-[2px] bg-[#00D4FF]"></span>
-          <span className="font-mono text-sm tracking-widest text-[#00D4FF] uppercase font-semibold">
-            Expertise
-          </span>
-          <span className="w-10 h-[2px] bg-[#00D4FF]"></span>
-        </div>
-        
-        <h3 className="text-3xl md:text-5xl font-heading font-bold text-white mb-4">
-          My Technical Skillset
+      {/* Title & 3D Column (Left) */}
+      <div className="reveal-item w-full md:w-1/2 flex flex-col items-start justify-center">
+        <h3 className="font-heading font-extrabold text-5xl md:text-7xl uppercase leading-[0.9] tracking-wider text-white mb-8">
+          WHAT <br />
+          <span className="text-[#6C63FF]">I DO</span>
         </h3>
         
-        <p className="text-[#6B6B80] max-w-lg font-sans text-sm md:text-base">
-          A summary of the languages, frameworks, and developer tools that I use to bring ideas to life.
-        </p>
+        <div className="w-full max-w-[280px] h-[180px] pointer-events-none select-none">
+          <Canvas camera={{ position: [0, 0, 3], fov: 60 }}>
+            <ambientLight intensity={0.5} />
+            <WhatIDo3DVisual />
+          </Canvas>
+        </div>
       </div>
 
-      {/* Grid of categories */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {categories.map((cat, catIndex) => (
-          <div
-            key={catIndex}
-            className="reveal-item p-6 md:p-8 rounded-2xl bg-[#111118] border border-[#1E1E2E] hover:border-[#6C63FF]/50 transition-all duration-300 group flex flex-col h-full shadow-[0_4px_30px_rgba(0,0,0,0.2)]"
-          >
-            <h4 className="text-xl font-heading font-bold text-white mb-2 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#6C63FF] group-hover:bg-[#00D4FF] transition-colors duration-300"></span>
-              {cat.title}
-            </h4>
-            
-            <p className="text-[#6B6B80] text-xs font-sans mb-6 leading-relaxed">
-              {cat.description}
-            </p>
-
-            <div className="flex flex-wrap gap-2.5 mt-auto">
-              {cat.skills.map((skill) => (
-                <span
-                  key={skill}
-                  className="interactive px-3 py-1.5 rounded-lg bg-[#0a0a0f] border border-[#1E1E2E]/80 text-[#E8E8F0] font-mono text-xs hover:border-[#00D4FF] hover:text-[#00D4FF] hover:bg-[#00D4FF]/5 transition-all duration-300 select-none shadow-sm"
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
+      {/* Cards Column with Corner Brackets (Right) */}
+      <div className="reveal-item w-full md:w-1/2 flex flex-col gap-10 relative">
+        {/* Development Card */}
+        <div className="corner-bracket-card p-8 bg-[#111118]/40 border border-[#1E1E2E]/50 rounded-lg hover:bg-[#111118]/80 transition-all duration-300">
+          <div className="corner-bracket-child"></div>
+          
+          <h4 className="text-2xl font-heading font-extrabold tracking-wider text-[#00D4FF] mb-2">
+            DEVELOP
+          </h4>
+          <span className="font-mono text-xs uppercase tracking-widest text-[#6B6B80] block mb-4">
+            Engineering & Infrastructure
+          </span>
+          <p className="text-[#6B6B80] font-sans text-sm md:text-base leading-relaxed mb-6">
+            Building responsive web architectures, clean RESTful endpoints, and implementing reliable backend system modules.
+          </p>
+          
+          <div className="flex flex-wrap gap-2">
+            {devSkills.map((skill) => (
+              <span
+                key={skill}
+                className="interactive px-2.5 py-1 rounded-full bg-[#0a0a0f] border border-[#1E1E2E] text-xs font-mono text-[#E8E8F0] hover:text-[#00D4FF] hover:border-[#00D4FF] transition-all duration-300 select-none"
+              >
+                {skill}
+              </span>
+            ))}
           </div>
-        ))}
+        </div>
+
+        {/* Design Card */}
+        <div className="corner-bracket-card p-8 bg-[#111118]/40 border border-[#1E1E2E]/50 rounded-lg hover:bg-[#111118]/80 transition-all duration-300">
+          <div className="corner-bracket-child"></div>
+          
+          <h4 className="text-2xl font-heading font-extrabold tracking-wider text-[#6C63FF] mb-2">
+            DESIGN
+          </h4>
+          <span className="font-mono text-xs uppercase tracking-widest text-[#6B6B80] block mb-4">
+            Creative & Interaction
+          </span>
+          <p className="text-[#6B6B80] font-sans text-sm md:text-base leading-relaxed mb-6">
+            Crafting beautiful layouts, designing interactive 3D web interfaces, and creating fluid animation flows using modern engines.
+          </p>
+          
+          <div className="flex flex-wrap gap-2">
+            {designSkills.map((skill) => (
+              <span
+                key={skill}
+                className="interactive px-2.5 py-1 rounded-full bg-[#0a0a0f] border border-[#1E1E2E] text-xs font-mono text-[#E8E8F0] hover:text-[#6C63FF] hover:border-[#6C63FF] transition-all duration-300 select-none"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

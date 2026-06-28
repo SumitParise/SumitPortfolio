@@ -14,22 +14,20 @@ function Floating3DBackground() {
     if (meshRef.current) {
       meshRef.current.rotation.x = time * 0.08;
       meshRef.current.rotation.y = time * 0.12;
-      // Soft breathing scale
-      const pulse = 1 + Math.sin(time * 0.5) * 0.05;
+      const pulse = 1.3 + Math.sin(time * 0.5) * 0.06;
       meshRef.current.scale.set(pulse, pulse, pulse);
     }
     if (pointsRef.current) {
       pointsRef.current.rotation.y = -time * 0.03;
-      pointsRef.current.rotation.x = -time * 0.01;
+      pointsRef.current.rotation.x = -time * 0.015;
     }
   });
 
-  const count = 250;
+  const count = 350;
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      // Distribute particles in a sphere-like shell
-      const r = 3 + Math.random() * 4;
+      const r = 2.5 + Math.random() * 3.5;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
@@ -41,13 +39,11 @@ function Floating3DBackground() {
 
   return (
     <group>
-      {/* Central 3D Geometry */}
       <mesh ref={meshRef} position={[0, 0, 0]}>
-        <icosahedronGeometry args={[1.5, 1]} />
-        <meshBasicMaterial color="#6C63FF" wireframe transparent opacity={0.2} />
+        <icosahedronGeometry args={[1.4, 1]} />
+        <meshBasicMaterial color="#6C63FF" wireframe transparent opacity={0.25} />
       </mesh>
       
-      {/* Outer Particle Field */}
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute
@@ -60,10 +56,10 @@ function Floating3DBackground() {
         </bufferGeometry>
         <pointsMaterial
           color="#00D4FF"
-          size={0.05}
+          size={0.06}
           sizeAttenuation={true}
           transparent
-          opacity={0.4}
+          opacity={0.5}
           depthWrite={false}
         />
       </points>
@@ -81,40 +77,41 @@ const Hero = () => {
       // 1. Reveal name characters
       gsap.fromTo(
         '.char',
-        { opacity: 0, y: 50 },
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
-          stagger: 0.04,
+          stagger: 0.03,
           duration: 0.8,
           ease: 'back.out(1.5)',
           delay: 0.4,
         }
       );
 
-      // 2. Fade in subtitle, tagline and CTA buttons
+      // 2. Fade in labels and items
       gsap.fromTo(
         '.hero-fade-in',
-        { opacity: 0, y: 30 },
+        { opacity: 0, y: 25 },
         {
           opacity: 1,
           y: 0,
-          stagger: 0.15,
-          duration: 1,
+          stagger: 0.12,
+          duration: 0.9,
           ease: 'power3.out',
-          delay: 1.0,
+          delay: 0.8,
         }
       );
 
       // 3. Fade in 3D Canvas
       gsap.fromTo(
         '.canvas-container',
-        { opacity: 0 },
+        { opacity: 0, scale: 0.9 },
         {
           opacity: 1,
-          duration: 1.5,
+          scale: 1,
+          duration: 1.6,
           ease: 'power2.out',
-          delay: 0.8,
+          delay: 0.5,
         }
       );
     }, containerRef);
@@ -134,7 +131,7 @@ const Hero = () => {
     <section
       id="hero"
       ref={containerRef}
-      className="relative w-full h-screen bg-[#0a0a0f] flex flex-col justify-center items-center overflow-hidden px-6"
+      className="relative w-full h-screen bg-[#0a0a0f] overflow-hidden flex flex-col justify-between lg:justify-center items-center py-24 lg:py-0"
     >
       {/* Signature Breathing Aurora Background */}
       <div className="aurora-container">
@@ -142,76 +139,86 @@ const Hero = () => {
         <div className="aurora-glow-cyan"></div>
       </div>
 
-      {/* 3D Background Canvas */}
-      <div className="canvas-container absolute inset-0 w-full h-full z-10 pointer-events-none opacity-0">
-        <Canvas camera={{ position: [0, 0, 8], fov: 60 }}>
-          <ambientLight intensity={0.5} />
-          <Floating3DBackground />
-        </Canvas>
-      </div>
-
-      {/* Main Content Overlay */}
-      <div className="relative z-20 flex flex-col items-center text-center max-w-4xl">
-        <p className="hero-fade-in text-[#00D4FF] font-mono text-sm tracking-[0.2em] uppercase mb-4 opacity-0">
-          Hello World, I'm
-        </p>
-
-        {/* Character-by-character name reveal */}
-        <h1 className="text-5xl md:text-8xl font-heading font-bold text-white tracking-tight leading-none mb-6 select-none">
-          {nameChars.map((char, index) => (
-            <span
-              key={index}
-              className="char inline-block opacity-0"
-              style={{ whiteSpace: char === ' ' ? 'pre' : 'normal' }}
-            >
-              {char}
-            </span>
-          ))}
-        </h1>
-
-        <h2 className="hero-fade-in text-2xl md:text-4xl font-heading font-medium text-[#E8E8F0] mb-4 opacity-0">
-          {PORTFOLIO.role}
-        </h2>
-
-        <p className="hero-fade-in text-base md:text-lg text-[#6B6B80] max-w-xl mb-10 leading-relaxed font-sans opacity-0">
-          {PORTFOLIO.tagline}
-        </p>
-
-        <div className="hero-fade-in flex flex-col sm:flex-row items-center justify-center gap-4 w-full opacity-0">
-          <button
-            onClick={(e) => handleScrollTo(e, 'projects')}
-            className="interactive px-8 py-3.5 rounded-full bg-[#6C63FF] text-[#E8E8F0] font-heading font-semibold hover:bg-[#6C63FF]/85 hover:shadow-[0_0_20px_rgba(108,99,255,0.4)] transition-all duration-300 w-full sm:w-auto"
-          >
-            View My Work
-          </button>
-          <button
-            onClick={(e) => handleScrollTo(e, 'contact')}
-            className="interactive px-8 py-3.5 rounded-full border border-[#1E1E2E] bg-[#111118]/80 text-[#E8E8F0] hover:border-[#00D4FF] hover:bg-[#111118] transition-all duration-300 font-heading font-semibold w-full sm:w-auto shadow-[0_0_15px_rgba(0,0,0,0.3)]"
-          >
-            Contact Me
-          </button>
+      {/* 3D Background Canvas (Centerpiece) */}
+      <div className="canvas-container absolute inset-0 w-full h-full z-10 flex items-center justify-center pointer-events-none opacity-0">
+        <div className="w-full max-w-[800px] h-[75vh] md:h-screen">
+          <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
+            <ambientLight intensity={0.6} />
+            <Floating3DBackground />
+          </Canvas>
         </div>
       </div>
 
-      {/* Down Arrow Indicator */}
-      <div className="hero-fade-in absolute bottom-8 z-20 animate-bounce opacity-0">
+      {/* Left Column (Desktop: left sidebar role, Mobile: top center) */}
+      <div className="relative z-20 w-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col lg:flex-row justify-between items-center h-full lg:h-auto gap-8 lg:gap-0">
+        
+        {/* Name Column */}
+        <div className="w-full lg:w-auto text-left lg:max-w-md self-start lg:self-center">
+          <p className="hero-fade-in text-[#6C63FF] font-mono text-sm tracking-[0.2em] uppercase mb-2 opacity-0">
+            Hello! I'm
+          </p>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold text-white tracking-tight leading-[1.1] mb-4 select-none">
+            {nameChars.map((char, index) => (
+              <span
+                key={index}
+                className="char inline-block opacity-0"
+                style={{ whiteSpace: char === ' ' ? 'pre' : 'normal' }}
+              >
+                {char}
+              </span>
+            ))}
+          </h1>
+          <p className="hero-fade-in text-[#6B6B80] font-sans text-sm md:text-base leading-relaxed opacity-0 max-w-sm">
+            {PORTFOLIO.tagline}
+          </p>
+        </div>
+
+        {/* Right Column (Desktop: right sidebar role, Mobile: bottom center) */}
+        <div className="w-full lg:w-auto text-left lg:max-w-md self-end lg:self-center flex flex-col items-start lg:items-end">
+          <div className="hero-fade-in flex flex-col items-start lg:items-end relative select-none opacity-0">
+            <span className="text-[#00D4FF] font-mono text-sm tracking-widest uppercase mb-1">
+              A Creative
+            </span>
+            <div className="relative font-heading font-extrabold tracking-wider leading-none mt-2 select-none">
+              {/* Back Outline text */}
+              <div className="text-outline-gray text-5xl md:text-7xl opacity-35 select-none uppercase">
+                DEVELOPER
+              </div>
+              {/* Front Solid Text */}
+              <div className="absolute top-4 left-4 lg:left-auto lg:right-4 text-[#E8E8F0] text-4xl md:text-6xl font-black drop-shadow-[0_0_15px_rgba(108,99,255,0.35)] uppercase">
+                ENGINEER
+              </div>
+            </div>
+          </div>
+          
+          {/* Scroll Button Overlay */}
+          <div className="hero-fade-in mt-12 flex gap-4 opacity-0">
+            <button
+              onClick={(e) => handleScrollTo(e, 'projects')}
+              className="interactive px-6 py-2.5 rounded-full border border-[#6C63FF] text-[#E8E8F0] text-xs font-heading font-semibold hover:bg-[#6C63FF]/15 hover:border-[#00D4FF] transition-all duration-300 shadow-[0_0_15px_rgba(108,99,255,0.1)]"
+            >
+              My Work
+            </button>
+            <button
+              onClick={(e) => handleScrollTo(e, 'contact')}
+              className="interactive px-6 py-2.5 rounded-full border border-[#1E1E2E] bg-[#111118]/80 text-[#6B6B80] hover:text-white hover:border-[#6C63FF] transition-all duration-300 text-xs font-heading font-semibold"
+            >
+              Contact
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Down Scroll Indicator */}
+      <div className="hero-fade-in absolute bottom-6 z-20 animate-bounce hidden lg:block opacity-0">
         <button
           onClick={(e) => handleScrollTo(e, 'about')}
           className="text-[#6B6B80] hover:text-[#00D4FF] transition-colors duration-300"
           aria-label="Scroll Down"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M19 14l-7 7m0 0l-7-7m7 7V3"
-            />
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
           </svg>
         </button>
       </div>

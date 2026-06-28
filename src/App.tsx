@@ -7,6 +7,7 @@ import Experience from './components/sections/Experience';
 import Contact from './components/sections/Contact';
 import Footer from './components/Footer';
 import CustomCursor from './components/CustomCursor';
+import SocialSidebar from './components/SocialSidebar';
 
 function App() {
   return (
@@ -17,8 +18,11 @@ function App() {
       {/* Navigation Bar */}
       <Navbar />
       
+      {/* Social Sidebar (Fixed Left Pinned) */}
+      <SocialSidebar />
+      
       {/* Main Sections */}
-      <main className="relative z-10">
+      <main className="relative z-10 pl-0 md:pl-20">
         <Hero />
         <About />
         <Skills />

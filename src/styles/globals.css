@@ -154,8 +154,80 @@
               0 1px 15px 0px rgba(108, 99, 255, 0.05);
 }
 
-/* Accent Glow Border for experience and hover states */
-.glow-accent-hover:hover {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 15px rgba(108, 99, 255, 0.2);
+/* Outlined Text Helpers */
+.text-outline-gray {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(232, 232, 240, 0.15);
+}
+
+.text-outline-accent {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-accent);
+}
+
+.text-outline-accent-2 {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-accent-2);
+}
+
+/* Moncy.dev Corner Bracket Card */
+.corner-bracket-card {
+  position: relative;
+  transition: all 0.3s ease-in-out;
+}
+
+.corner-bracket-card::before,
+.corner-bracket-card::after,
+.corner-bracket-child::before,
+.corner-bracket-child::after {
+  content: "";
+  width: 12px;
+  height: 12px;
+  position: absolute;
+  border: 2.5px solid var(--color-border);
+  transition: border-color 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Top-Left Corner */
+.corner-bracket-card::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+}
+
+/* Top-Right Corner */
+.corner-bracket-child::before {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+}
+
+/* Bottom-Left Corner */
+.corner-bracket-card::after {
+  bottom: -2px;
+  left: -2px;
+  border-top: none;
+  border-right: none;
+}
+
+/* Bottom-Right Corner */
+.corner-bracket-child::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Hover highlights for bracket cards */
+.corner-bracket-card:hover {
+  border-color: transparent;
+}
+
+.corner-bracket-card:hover::before,
+.corner-bracket-card:hover::after,
+.corner-bracket-card:hover .corner-bracket-child::before,
+.corner-bracket-card:hover .corner-bracket-child::after {
+  border-color: var(--color-accent-2);
 }
