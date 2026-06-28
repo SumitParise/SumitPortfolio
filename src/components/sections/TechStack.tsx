@@ -98,7 +98,7 @@ const TechStack = () => {
         }
         @keyframes spinner-wheel {
           from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          to { transform: rotate(-360deg); }
         }
 
         .animate-scroll-clouds {
@@ -366,7 +366,7 @@ const TechStack = () => {
 
         {/* Dynamic Vector SVG Cyclist (Fixed: Positioned to bottom-[52px] to align wheels perfectly with 60px road) */}
         <div
-          className={`absolute left-[18%] bottom-[52px] w-24 md:w-28 z-40 transition-all duration-300 select-none`}
+          className={`absolute left-[18%] bottom-[52px] w-24 md:w-28 z-40 transition-all duration-300 select-none scale-x-[-1]`}
         >
           {/* Animated Ground Shadow */}
           <div
