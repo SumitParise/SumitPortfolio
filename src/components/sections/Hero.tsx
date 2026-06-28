@@ -31,6 +31,98 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
   const pointsRef = useRef<THREE.Points>(null);
 
+  // 1. Procedural Earth Texture (Oceans, Continents, Sahara, Ice caps)
+  const earthTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Ocean fill (Deep Navy Blue)
+    ctx.fillStyle = '#0a1d37';
+    ctx.fillRect(0, 0, 512, 256);
+
+    // North & South America continents
+    ctx.fillStyle = '#2e7d32'; // Green landmass
+    ctx.beginPath();
+    ctx.ellipse(130, 95, 45, 55, 0.15, 0, Math.PI * 2); // North America core
+    ctx.ellipse(155, 175, 30, 50, -0.1, 0, Math.PI * 2); // South America core
+    ctx.fill();
+
+    // Eurasia & Africa continents
+    ctx.beginPath();
+    ctx.ellipse(290, 85, 75, 45, 0.05, 0, Math.PI * 2); // Eurasia
+    ctx.ellipse(285, 155, 42, 48, -0.05, 0, Math.PI * 2); // Africa
+    ctx.ellipse(385, 110, 50, 40, -0.15, 0, Math.PI * 2); // East Asia / India
+    ctx.ellipse(430, 185, 24, 18, 0.1, 0, Math.PI * 2); // Australia
+    ctx.fill();
+
+    // Sahara Desert & Middle East drylands (Sandy Gold/Brown)
+    ctx.fillStyle = '#c68a4c';
+    ctx.beginPath();
+    ctx.ellipse(280, 135, 28, 16, 0, 0, Math.PI * 2); // Sahara Desert
+    ctx.ellipse(330, 115, 20, 12, 0.1, 0, Math.PI * 2); // Middle East dryland
+    ctx.fill();
+
+    // Polar Ice caps (White)
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 512, 22);
+    ctx.fillRect(0, 238, 512, 18);
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, []);
+
+  // 2. Procedural Saturn Gas Bands Texture
+  const saturnTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Draw horizontal cream/beige/pale-orange bands
+    const bandColors = ['#eae0d5', '#dfd3c3', '#c6ac8f', '#dfd3c3', '#eae0d5', '#a5a58d'];
+    for (let y = 0; y < 128; y++) {
+      ctx.fillStyle = bandColors[Math.floor(y / 21.3) % bandColors.length];
+      ctx.fillRect(0, y, 256, 1);
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, []);
+
+  // 3. Procedural Mercury Rocky Cratered Texture
+  const mercuryTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+
+    // Solid Gray Core
+    ctx.fillStyle = '#707070';
+    ctx.fillRect(0, 0, 256, 128);
+
+    // Render random crater shadows
+    ctx.fillStyle = '#505050';
+    for (let i = 0; i < 20; i++) {
+      const x = Math.random() * 256;
+      const y = Math.random() * 128;
+      const r = 2.5 + Math.random() * 5.0;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, []);
+
   // Pre-generate 3D direction vectors and speeds for 80 heat flare particles
   const flareParticlesCount = 80;
   const flareData = useMemo(() => {
@@ -63,7 +155,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       p1Ref.current.rotation.y = time * 1.2;
     }
 
-    // 2. Slow Orbit Planet 2 group (Middle)
+    // 2. Slow Orbit Planet 2 group (Middle Earth)
     if (p2GroupRef.current) {
       p2GroupRef.current.position.x = 1.8 * Math.cos(time * 0.5);
       p2GroupRef.current.position.y = 1.8 * Math.sin(time * 0.5);
@@ -80,7 +172,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       earthCloudsRef.current.rotation.y = time * 0.25;
     }
 
-    // 3. Slow Orbit Planet 3 group (Outer)
+    // 3. Slow Orbit Planet 3 group (Outer Saturn)
     if (p3GroupRef.current) {
       p3GroupRef.current.position.x = 2.4 * Math.cos(time * 0.25);
       p3GroupRef.current.position.y = 2.4 * Math.sin(time * 0.25);
@@ -269,9 +361,9 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
           <mesh ref={p1Ref} rotation={[0, 0, 0.05]}>
             <sphereGeometry args={[0.065, 16, 16]} />
             <meshStandardMaterial
-              color="#8c8c8c"
-              roughness={0.7}
-              metalness={0.3}
+              map={mercuryTexture || undefined}
+              roughness={0.8}
+              metalness={0.1}
             />
           </mesh>
         </group>
@@ -285,13 +377,13 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
           </mesh>
           {/* Earth-like Planet + Orbiting Moon Group */}
           <group ref={p2GroupRef} rotation={[0, 0, 0.41]}>
-            {/* Blue Planet */}
+            {/* Blue Planet with continents */}
             <mesh>
               <sphereGeometry args={[0.09, 16, 16]} />
               <meshStandardMaterial
-                color="#1e3a8a"
-                roughness={0.2}
-                metalness={0.8}
+                map={earthTexture || undefined}
+                roughness={0.4}
+                metalness={0.1}
               />
             </mesh>
             {/* Earth Atmosphere Glow */}
@@ -336,11 +428,11 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
           </mesh>
           {/* Saturn Planet + Ring Group */}
           <group ref={p3GroupRef} rotation={[0, 0, 0.46]}>
-            {/* Pale Orange Saturn Planet */}
+            {/* Pale Orange Saturn Planet with gaseous bands */}
             <mesh>
               <sphereGeometry args={[0.08, 16, 16]} />
               <meshStandardMaterial
-                color="#e2e8f0"
+                map={saturnTexture || undefined}
                 roughness={0.6}
                 metalness={0.2}
               />
