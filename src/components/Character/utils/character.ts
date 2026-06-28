@@ -36,25 +36,33 @@ const setCharacter = (
                 child.receiveShadow = true;
                 mesh.frustumCulled = true;
 
+                const nameLower = child.name.toLowerCase();
+
                 // Stylize character clothing and cap for a stylish coder aesthetic
-                if (child.name === "BODY.SHIRT" || child.name === "Cube.002" || child.name === "Pant" || child.name === "Shoe") {
+                if (
+                  nameLower.includes("shirt") || 
+                  child.name === "Cube.002" || 
+                  child.name === "Cube_002" || 
+                  nameLower.includes("pant") || 
+                  nameLower.includes("shoe")
+                ) {
                   mesh.material = (mesh.material as THREE.Material).clone();
                   const mat = mesh.material as THREE.MeshStandardMaterial;
                   mat.vertexColors = false;
 
-                  if (child.name === "BODY.SHIRT") {
+                  if (nameLower.includes("shirt")) {
                     // Sleek matte black hoodie
                     mat.color.set("#050505");
                     mat.roughness = 0.85;
-                  } else if (child.name === "Cube.002") {
+                  } else if (child.name === "Cube.002" || child.name === "Cube_002") {
                     // Vibrant neon violet cap (brand accent)
                     mat.color.set("#6C63FF");
                     mat.roughness = 0.5;
-                  } else if (child.name === "Pant") {
+                  } else if (nameLower.includes("pant")) {
                     // Dark charcoal techwear pants
                     mat.color.set("#161622");
                     mat.roughness = 0.9;
-                  } else if (child.name === "Shoe") {
+                  } else if (nameLower.includes("shoe")) {
                     // Sleek neon cyan sneakers (brand accent 2)
                     mat.color.set("#00D4FF");
                     mat.roughness = 0.4;
