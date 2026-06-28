@@ -7,10 +7,11 @@ import { PORTFOLIO } from '../../data/portfolio';
 // 3D centerpiece interaction props
 interface SphereProps {
   mouseRef: React.MutableRefObject<{ x: number; y: number }>;
+  isMobile: boolean;
 }
 
 // Interactive 3D Solar System centerpiece with a glowing real Sun, planets, and moons
-function DualRotatingSphere({ mouseRef }: SphereProps) {
+function DualRotatingSphere({ mouseRef, isMobile }: SphereProps) {
   const modelGroupRef = useRef<THREE.Group>(null);
   
   const sunRef = useRef<THREE.Mesh>(null);
@@ -30,8 +31,8 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
   const pointsRef = useRef<THREE.Points>(null);
 
-  // Pre-generate 3D direction vectors and speeds for 80 heat flare particles
-  const flareParticlesCount = 80;
+  // Pre-generate 3D direction vectors and speeds for heat flare particles (reduced on mobile)
+  const flareParticlesCount = isMobile ? 25 : 80;
   const flareData = useMemo(() => {
     const data = [];
     for (let i = 0; i < flareParticlesCount; i++) {
@@ -49,7 +50,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       });
     }
     return data;
-  }, []);
+  }, [flareParticlesCount]);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
@@ -84,7 +85,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
     // 4. Heat particles (Solar Flares) radiating outward
     flaresRef.current.forEach((mesh, idx) => {
-      if (!mesh) return;
+      if (!mesh || idx >= flareParticlesCount) return;
       const p = flareData[idx];
       const life = ((time * p.speed + p.offset) % 1.4); // travels out to 1.4 radius
       const progress = life / 1.4;
@@ -135,8 +136,8 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
     }
   });
 
-  // Particles coordinates (Outer Space background)
-  const particlesCount = 280;
+  // Particles coordinates (Outer Space background - reduced on mobile)
+  const particlesCount = isMobile ? 95 : 280;
   const positions = useMemo(() => {
     const pos = new Float32Array(particlesCount * 3);
     for (let i = 0; i < particlesCount; i++) {
@@ -150,7 +151,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       pos[i * 3 + 2] = r * Math.cos(phi);
     }
     return pos;
-  }, []);
+  }, [particlesCount]);
 
   return (
     <group>
@@ -164,7 +165,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
         <group>
           {/* Main Hot Sun Core */}
           <mesh ref={sunRef}>
-            <sphereGeometry args={[0.5, 32, 32]} />
+            <sphereGeometry args={[0.5, isMobile ? 16 : 32, isMobile ? 16 : 32]} />
             <meshStandardMaterial
               color="#ffcc00"
               emissive="#ff3700"
@@ -190,22 +191,22 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
             
             {/* Plasma loops (prominences) sitting on the surface */}
             <mesh rotation={[0, 0, 0]}>
-              <torusGeometry args={[0.5, 0.012, 6, 24, Math.PI]} />
+              <torusGeometry args={[0.5, 0.012, 6, isMobile ? 12 : 24, Math.PI]} />
               <meshBasicMaterial color="#ff2200" transparent opacity={0.8} blending={THREE.AdditiveBlending} />
             </mesh>
             <mesh rotation={[Math.PI / 3, Math.PI / 4, 0]}>
-              <torusGeometry args={[0.5, 0.012, 6, 24, Math.PI]} />
+              <torusGeometry args={[0.5, 0.012, 6, isMobile ? 12 : 24, Math.PI]} />
               <meshBasicMaterial color="#ff5500" transparent opacity={0.8} blending={THREE.AdditiveBlending} />
             </mesh>
             <mesh rotation={[-Math.PI / 4, -Math.PI / 3, Math.PI / 2]}>
-              <torusGeometry args={[0.5, 0.012, 6, 24, Math.PI]} />
+              <torusGeometry args={[0.5, 0.012, 6, isMobile ? 12 : 24, Math.PI]} />
               <meshBasicMaterial color="#ff1100" transparent opacity={0.8} blending={THREE.AdditiveBlending} />
             </mesh>
           </mesh>
           
           {/* Solar Plasma Turbulence Layer (boiling moiré texture) */}
           <mesh ref={plasmaRef}>
-            <sphereGeometry args={[0.505, 24, 24]} />
+            <sphereGeometry args={[0.505, isMobile ? 12 : 24, isMobile ? 12 : 24]} />
             <meshBasicMaterial
               color="#ff4500"
               wireframe
@@ -217,7 +218,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
           {/* Inner Glowing Sun Corona */}
           <mesh ref={sunCoronaRef}>
-            <sphereGeometry args={[0.56, 32, 32]} />
+            <sphereGeometry args={[0.56, isMobile ? 16 : 32, isMobile ? 16 : 32]} />
             <meshBasicMaterial
               color="#ff7700"
               transparent
@@ -227,17 +228,19 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
             />
           </mesh>
 
-          {/* Outer Sun Corona Atmosphere (Heat Haze) */}
-          <mesh ref={sunCoronaOuterRef}>
-            <sphereGeometry args={[0.66, 32, 32]} />
-            <meshBasicMaterial
-              color="#ff3300"
-              transparent
-              opacity={0.25}
-              blending={THREE.AdditiveBlending}
-              depthWrite={false}
-            />
-          </mesh>
+          {/* Outer Sun Corona Atmosphere (Heat Haze - Desktop only) */}
+          {!isMobile && (
+            <mesh ref={sunCoronaOuterRef}>
+              <sphereGeometry args={[0.66, 32, 32]} />
+              <meshBasicMaterial
+                color="#ff3300"
+                transparent
+                opacity={0.25}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+          )}
 
           {/* Radial Heat Flare Particles (Solar Wind) */}
           {flareData.map((p, idx) => (
@@ -367,6 +370,8 @@ const Hero = () => {
   const [showCanvas, setShowCanvas] = useState(false);
   const mouseRef = useRef({ x: 0, y: 0 });
 
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   // Split name for two lines
   const nameParts = useMemo(() => {
     const parts = PORTFOLIO.name.toUpperCase().split(' ');
@@ -454,12 +459,12 @@ const Hero = () => {
       <div className="canvas-container absolute inset-0 w-full h-full z-10 flex items-center justify-center pointer-events-none opacity-0">
         <div className="w-full max-w-[900px] h-[80vh] md:h-screen">
           {showCanvas && (
-            <Canvas camera={{ position: [0, 0, 5.5], fov: 60 }}>
+            <Canvas camera={{ position: [0, 0, isMobile ? 6.5 : 5.5], fov: 60 }}>
               <ambientLight intensity={0.4} />
               {/* Static background contrast lights */}
               <pointLight position={[-6, 6, 4]} intensity={6} color="#6C63FF" />
               <pointLight position={[6, -6, 4]} intensity={6} color="#00D4FF" />
-              <DualRotatingSphere mouseRef={mouseRef} />
+              <DualRotatingSphere mouseRef={mouseRef} isMobile={isMobile} />
             </Canvas>
           )}
         </div>
