@@ -158,12 +158,35 @@ const TechStack = () => {
             : 'bg-gradient-to-b from-sky-400 to-sky-100'
         }`}
       >
-        {/* Sun / Moon */}
+        {/* Twinkling Star Field (Night Mode only) */}
+        {isNight && (
+          <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+            {[...Array(15)].map((_, idx) => {
+              const tops = [8, 15, 5, 22, 12, 28, 6, 18, 10, 25, 14, 30, 4, 20, 16];
+              const lefts = [5, 15, 25, 35, 45, 55, 65, 75, 85, 95, 10, 30, 50, 70, 90];
+              const delay = idx * 0.35;
+              return (
+                <div
+                  key={idx}
+                  className="absolute bg-white rounded-full animate-pulse w-[1.5px] h-[1.5px] opacity-75"
+                  style={{
+                    top: `${tops[idx % tops.length]}%`,
+                    left: `${lefts[idx % lefts.length]}%`,
+                    animationDelay: `${delay}s`,
+                    animationDuration: '2.2s'
+                  }}
+                />
+              );
+            })}
+          </div>
+        )}
+
+        {/* Sun / Moon (Crescent styled in Night mode) */}
         <div
-          className={`absolute w-16 h-16 md:w-24 md:h-24 rounded-full left-[18%] transition-all duration-1000 ease-in-out ${
+          className={`absolute transition-all duration-1000 ease-in-out ${
             isNight
-              ? 'bg-yellow-100 shadow-[0_0_40px_rgba(255,255,255,0.4)] top-[12%]'
-              : 'bg-yellow-300 shadow-[0_0_45px_rgba(253,224,71,0.5)] top-[18%]'
+              ? 'w-10 h-10 bg-transparent shadow-[-8px_8px_0_0_#fef08a] top-[10%] left-[22%] rotate-[15deg]'
+              : 'w-16 h-16 bg-yellow-300 rounded-full shadow-[0_0_40px_rgba(253,224,71,0.5)] top-[18%] left-[18%]'
           }`}
         ></div>
 
@@ -347,26 +370,36 @@ const TechStack = () => {
           })}
         </div>
 
-        {/* Sidewalk & Asphalt Road */}
+        {/* Concrete Sidewalk Curb layer with joint dividers */}
         <div
-          className="w-[200%] h-[60px] bg-[#22222a] border-t-[4px] border-[#3b3b4f] shrink-0 z-30 flex whitespace-nowrap animate-scroll-road"
+          className="absolute bottom-[50px] w-[200%] h-[10px] bg-[#3a3a45] border-t border-b border-[#2d2d3d] z-30 flex whitespace-nowrap animate-scroll-road"
+          style={getPlayState(1.5)}
+        >
+          {[...Array(40)].map((_, idx) => (
+            <div key={idx} className="w-12 h-full border-r border-[#2d2d3d]/50 shrink-0"></div>
+          ))}
+        </div>
+
+        {/* Asphalt Road (Height adjusted to 50px) */}
+        <div
+          className="w-[200%] h-[50px] bg-[#1a1a22] shrink-0 z-30 flex whitespace-nowrap animate-scroll-road animate-scroll-road"
           style={getPlayState(1.5)}
         >
           <div className="w-full flex items-center justify-around">
-            {[...Array(8)].map((_, idx) => (
-              <div key={idx} className="w-12 h-1 bg-yellow-500/50 rounded-full"></div>
+            {[...Array(6)].map((_, idx) => (
+              <div key={idx} className="w-16 h-1 bg-yellow-500/30 rounded-full"></div>
             ))}
           </div>
           <div className="w-full flex items-center justify-around">
-            {[...Array(8)].map((_, idx) => (
-              <div key={idx} className="w-12 h-1 bg-yellow-500/50 rounded-full"></div>
+            {[...Array(6)].map((_, idx) => (
+              <div key={idx} className="w-16 h-1 bg-yellow-500/30 rounded-full"></div>
             ))}
           </div>
         </div>
 
-        {/* Dynamic Vector SVG Cyclist (Fixed: Positioned to bottom-[52px] to align wheels perfectly with 60px road) */}
+        {/* Dynamic Vector SVG Cyclist (Repositioned to bottom-[46px] to align wheels perfectly on 50px road surface) */}
         <div
-          className={`absolute left-[18%] bottom-[52px] w-24 md:w-28 z-40 transition-all duration-300 select-none scale-x-[-1]`}
+          className={`absolute left-[18%] bottom-[46px] w-24 md:w-28 z-40 transition-all duration-300 select-none scale-x-[-1]`}
         >
           {/* Animated Ground Shadow */}
           <div
@@ -410,7 +443,7 @@ const TechStack = () => {
               <line x1="67.2" y1="72.8" x2="82.8" y2="57.2" stroke="#6B6B80" strokeWidth="0.8" />
             </g>
 
-            {/* Bicycle Frame (Fixed: Redesigned with Fork connecting Front Wheel to Handlebars, Top tube, Down tube, Seat tube, Chainstay and Seatstay) */}
+            {/* Bicycle Frame */}
             <path
               d="M25 65 L35 35 L32 28 M35 35 L56 45 M35 35 L48 65 M56 45 L48 65 M48 65 L75 65 M56 45 L75 65"
               stroke={isNight ? "#00D4FF" : "#6C63FF"}
@@ -433,7 +466,7 @@ const TechStack = () => {
             {/* Pedal Crank Center */}
             <circle cx="48" cy="65" r="2.5" fill="#888" />
 
-            {/* Pedaling Smiling Rider (Fixed: Adjusted position to sit on seat and lean forward to handle bars) */}
+            {/* Pedaling Smiling Rider */}
             <g
               className={`${!isPaused && 'animate-rider-bob'}`}
               style={{
