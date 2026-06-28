@@ -40,15 +40,15 @@ export const PORTFOLIO = {
   ],
   experience: [
     {
-      company: "TechSolutions Inc.",
+      company: "The Access Group",
       role: "Software Engineer",
-      period: "Jan 2023 – Present",
+      period: "Dec-2025 to ongoing",
       description: "Architecting high-performance React frontends and designing scalable microservices. Spearheaded transition to modern monorepo setup."
     },
     {
-      company: "Innovation Labs",
+      company: "Sthapatya consultancy",
       role: "Associate Developer",
-      period: "Jun 2021 – Dec 2022",
+      period: "Jan-2025 to Nov-2025",
       description: "Developed and maintained RESTful APIs using Python and FastAPI. Improved query optimization on database operations, cutting latency by 25%."
     }
   ]
