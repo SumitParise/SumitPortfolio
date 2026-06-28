@@ -19,6 +19,8 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
   const plasmaRef = useRef<THREE.Mesh>(null);
   const flaresRef = useRef<(THREE.Mesh | null)[]>([]);
   
+  const sunLightRef = useRef<THREE.PointLight>(null);
+  
   const p1Ref = useRef<THREE.Mesh>(null);
   
   const p2GroupRef = useRef<THREE.Group>(null);
@@ -115,13 +117,18 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       sunCoronaOuterRef.current.scale.set(pulseOuter, pulseOuter, pulseOuter);
     }
 
-    // 6. Smooth mouse tilt on the solar system
+    // 6. Flickering solar light intensity (emits waves of heat illumination)
+    if (sunLightRef.current) {
+      sunLightRef.current.intensity = 50 + Math.sin(time * 7.0) * 6.0 + Math.cos(time * 15.0) * 2.5;
+    }
+
+    // 7. Smooth mouse tilt on the solar system
     if (modelGroupRef.current) {
       modelGroupRef.current.rotation.x = THREE.MathUtils.lerp(modelGroupRef.current.rotation.x, y * 0.45, 0.08);
       modelGroupRef.current.rotation.y = THREE.MathUtils.lerp(modelGroupRef.current.rotation.y, x * 0.45, 0.08);
     }
 
-    // 7. Starfield particles rotation
+    // 8. Starfield particles rotation
     if (pointsRef.current) {
       pointsRef.current.rotation.y = -time * 0.008 - x * 0.05;
       pointsRef.current.rotation.x = time * 0.001 - y * 0.05;
@@ -148,7 +155,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
   return (
     <group>
       {/* Central Sun point light source casting warm rays */}
-      <pointLight position={[0, 0, 0]} intensity={50} distance={15} color="#ff8800" />
+      <pointLight ref={sunLightRef} position={[0, 0, 0]} intensity={50} distance={15} color="#ff8800" />
 
       {/* Main Solar System Model Group (Tilts with mouse) */}
       <group ref={modelGroupRef}>
@@ -165,6 +172,35 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
               roughness={0.15}
               metalness={0.1}
             />
+            {/* Sunspot 1 */}
+            <mesh position={[0.35, 0.25, 0.25]}>
+              <sphereGeometry args={[0.045, 8, 8]} />
+              <meshStandardMaterial color="#2d1600" roughness={0.8} metalness={0.1} />
+            </mesh>
+            {/* Sunspot 2 */}
+            <mesh position={[-0.4, -0.15, 0.2]}>
+              <sphereGeometry args={[0.04, 8, 8]} />
+              <meshStandardMaterial color="#2d1600" roughness={0.8} metalness={0.1} />
+            </mesh>
+            {/* Sunspot 3 */}
+            <mesh position={[0.1, -0.38, -0.28]}>
+              <sphereGeometry args={[0.035, 8, 8]} />
+              <meshStandardMaterial color="#2d1600" roughness={0.8} metalness={0.1} />
+            </mesh>
+            
+            {/* Plasma loops (prominences) sitting on the surface */}
+            <mesh rotation={[0, 0, 0]}>
+              <torusGeometry args={[0.5, 0.012, 6, 24, Math.PI]} />
+              <meshBasicMaterial color="#ff2200" transparent opacity={0.8} blending={THREE.AdditiveBlending} />
+            </mesh>
+            <mesh rotation={[Math.PI / 3, Math.PI / 4, 0]}>
+              <torusGeometry args={[0.5, 0.012, 6, 24, Math.PI]} />
+              <meshBasicMaterial color="#ff5500" transparent opacity={0.8} blending={THREE.AdditiveBlending} />
+            </mesh>
+            <mesh rotation={[-Math.PI / 4, -Math.PI / 3, Math.PI / 2]}>
+              <torusGeometry args={[0.5, 0.012, 6, 24, Math.PI]} />
+              <meshBasicMaterial color="#ff1100" transparent opacity={0.8} blending={THREE.AdditiveBlending} />
+            </mesh>
           </mesh>
           
           {/* Solar Plasma Turbulence Layer (boiling moiré texture) */}
@@ -257,6 +293,17 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
                 emissiveIntensity={0.15}
               />
             </mesh>
+            {/* Earth Atmosphere Glow */}
+            <mesh>
+              <sphereGeometry args={[0.098, 16, 16]} />
+              <meshBasicMaterial
+                color="#00D4FF"
+                transparent
+                opacity={0.35}
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
             {/* Tiny Orbiting Moon */}
             <mesh ref={moonRef}>
               <sphereGeometry args={[0.025, 12, 12]} />
@@ -289,16 +336,29 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
                 emissiveIntensity={0.1}
               />
             </mesh>
-            {/* Planetary Ring */}
-            <mesh rotation={[Math.PI / 3, 0, 0]}>
-              <torusGeometry args={[0.155, 0.012, 4, 32]} />
-              <meshStandardMaterial
-                color="#ccaa99"
-                transparent
-                opacity={0.65}
-                roughness={0.4}
-              />
-            </mesh>
+            {/* Planetary Rings - Cassini Division */}
+            <group rotation={[Math.PI / 3, 0, 0]}>
+              {/* Inner Ring */}
+              <mesh>
+                <torusGeometry args={[0.13, 0.008, 4, 32]} />
+                <meshStandardMaterial
+                  color="#ccaa99"
+                  transparent
+                  opacity={0.7}
+                  roughness={0.4}
+                />
+              </mesh>
+              {/* Outer Ring */}
+              <mesh>
+                <torusGeometry args={[0.165, 0.005, 4, 32]} />
+                <meshStandardMaterial
+                  color="#b3998a"
+                  transparent
+                  opacity={0.5}
+                  roughness={0.4}
+                />
+              </mesh>
+            </group>
           </group>
         </group>
 
