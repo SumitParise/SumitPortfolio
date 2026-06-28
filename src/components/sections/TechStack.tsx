@@ -1,184 +1,245 @@
 import { useMemo, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import { PORTFOLIO } from '../../data/portfolio';
 
-// Dynamic brand-colored canvas texture generator
-const createTechTexture = (name: string, color: string) => {
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-  const ctx = canvas.getContext('2d');
-  if (ctx) {
-    // 1. Tech Brand Color base fill
-    ctx.fillStyle = color;
-    ctx.fillRect(0, 0, 256, 256);
-    
-    // 2. High-contrast white accent ring
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 14;
-    ctx.beginPath();
-    ctx.arc(128, 128, 110, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    // 3. Bold text monogram (white)
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 56px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    
-    const displayMap: Record<string, string> = {
-      'React': 'React',
-      'TypeScript': 'TS',
-      'Node.js': 'NODE',
-      'Python': 'PY',
-      'Three.js': '3D',
-      'GSAP': 'GSAP',
-      'REST APIs': 'API',
-      'Git': 'GIT',
-      'Docker': 'DOCK',
-      'Tailwind CSS': 'TW',
-      'HTML5/CSS3': 'CSS',
-      'FastAPI': 'API',
-      'Next.js': 'NEXT',
-      'MongoDB': 'DB',
-      'PostgreSQL': 'SQL',
-      'AWS': 'AWS',
-      'Express': 'EX',
-      'GraphQL': 'QL'
-    };
-    const text = displayMap[name] || name;
-    ctx.fillText(text.toUpperCase(), 128, 128);
-  }
-  const texture = new THREE.CanvasTexture(canvas);
-  return texture;
-};
-
-interface SpherePhysics {
-  name: string;
-  radius: number;
-  pos: THREE.Vector3;
-  vel: THREE.Vector3;
-  meshRef: React.MutableRefObject<THREE.Mesh | null>;
-  texture: THREE.CanvasTexture;
-  color: string;
-}
-
-function PhysicsContainer({ spheres }: { spheres: SpherePhysics[] }) {
-  const mouseLightRef = useRef<THREE.PointLight>(null);
+// Stylized Low-Poly Synthwave Car
+function CyberCar() {
+  const bodyRef = useRef<THREE.Group>(null);
+  const wheelFL = useRef<THREE.Mesh>(null);
+  const wheelFR = useRef<THREE.Mesh>(null);
+  const wheelBL = useRef<THREE.Mesh>(null);
+  const wheelBR = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
-    const count = spheres.length;
+    const time = state.clock.getElapsedTime();
     
-    // Mouse coords in 3D viewport space
-    const mouseX = (state.pointer.x * state.viewport.width) / 2;
-    const mouseY = (state.pointer.y * state.viewport.height) / 2;
-    const mousePos = new THREE.Vector3(mouseX, mouseY, 0);
-
-    // Dynamic point light tracking cursor to cast highlights on glossy spheres
-    if (mouseLightRef.current) {
-      mouseLightRef.current.position.set(mouseX, mouseY, 2.2);
+    // Simulate engine idle rumble and bobbing
+    if (bodyRef.current) {
+      bodyRef.current.position.y = 0.35 + Math.sin(time * 18) * 0.01;
+      bodyRef.current.rotation.z = Math.sin(time * 2) * 0.008;
     }
-
-    // 1. Apply gravity attraction to center & mouse repulsion forces
-    spheres.forEach((s) => {
-      // Pull to center
-      const toCenter = s.pos.clone().negate().normalize().multiplyScalar(0.009);
-      s.vel.add(toCenter);
-
-      // Repel from cursor pointer
-      const toMouse = s.pos.clone().sub(mousePos);
-      toMouse.z = 0; // Constrain force to 2D
-      const distToMouse = toMouse.length();
-      if (distToMouse < 3.2) {
-        const force = (3.2 - distToMouse) * 0.07;
-        s.vel.add(toMouse.normalize().multiplyScalar(force));
+    
+    // Spin wheels on drive
+    const spinSpeed = 0.22;
+    [wheelFL, wheelFR, wheelBL, wheelBR].forEach((ref) => {
+      if (ref.current) {
+        ref.current.rotation.x += spinSpeed;
       }
+    });
+  });
 
-      // Friction damping
-      s.vel.multiplyScalar(0.92);
+  return (
+    <group ref={bodyRef} position={[0, 0.35, 1.8]}>
+      {/* Car Body Base */}
+      <mesh castShadow>
+        <boxGeometry args={[1.0, 0.35, 1.9]} />
+        <meshStandardMaterial color="#6C63FF" roughness={0.1} metalness={0.7} />
+      </mesh>
       
-      // Update position
-      s.pos.add(s.vel);
-    });
+      {/* Cabin/Glass (Cyan transparent) */}
+      <mesh position={[0, 0.3, -0.1]} castShadow>
+        <boxGeometry args={[0.8, 0.3, 0.9]} />
+        <meshStandardMaterial color="#00D4FF" roughness={0.05} transparent opacity={0.5} />
+      </mesh>
 
-    // 2. Multi-pass sphere-to-sphere collision solver for physics stability
-    for (let k = 0; k < 3; k++) {
-      for (let i = 0; i < count; i++) {
-        for (let j = i + 1; j < count; j++) {
-          const sA = spheres[i];
-          const sB = spheres[j];
-          
-          const dir = sA.pos.clone().sub(sB.pos);
-          dir.z = 0; // Keep collisions on 2D plane
-          const dist = dir.length();
-          const minDist = sA.radius + sB.radius;
-          
-          if (dist < minDist) {
-            const overlap = minDist - dist;
-            // Push overlap resolution
-            const push = dir.normalize().multiplyScalar(overlap * 0.52);
-            sA.pos.add(push);
-            sB.pos.sub(push);
-            
-            // Elastic velocity transfer
-            const relVel = sA.vel.clone().sub(sB.vel);
-            const speed = relVel.dot(dir);
-            if (speed < 0) {
-              const impulse = dir.multiplyScalar(speed * 0.5);
-              sA.vel.sub(impulse);
-              sB.vel.add(impulse);
-            }
-          }
-        }
-      }
+      {/* Driver Person sitting inside */}
+      <group position={[0, 0.3, -0.1]}>
+        {/* Head */}
+        <mesh position={[0, 0.08, 0.1]}>
+          <sphereGeometry args={[0.09, 8, 8]} />
+          <meshBasicMaterial color="#eae5ec" />
+        </mesh>
+        {/* Torso */}
+        <mesh position={[0, -0.06, 0.1]}>
+          <boxGeometry args={[0.22, 0.14, 0.12]} />
+          <meshBasicMaterial color="#0c0c12" />
+        </mesh>
+      </group>
+
+      {/* Glowing Headlights */}
+      <mesh position={[-0.38, 0.04, 0.96]}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      <mesh position={[0.38, 0.04, 0.96]}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshBasicMaterial color="#ffffff" />
+      </mesh>
+      
+      {/* Headlight spotlight beams */}
+      <spotLight
+        position={[0, 0.1, 1.0]}
+        angle={0.45}
+        penumbra={0.6}
+        intensity={6}
+        color="#00D4FF"
+        distance={20}
+      />
+
+      {/* Wheels */}
+      {/* Front Left */}
+      <mesh ref={wheelFL} position={[-0.56, -0.12, 0.55]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.2, 0.2, 0.15, 12]} />
+        <meshStandardMaterial color="#0a0a0f" roughness={0.9} />
+      </mesh>
+      {/* Front Right */}
+      <mesh ref={wheelFR} position={[0.56, -0.12, 0.55]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.2, 0.2, 0.15, 12]} />
+        <meshStandardMaterial color="#0a0a0f" roughness={0.9} />
+      </mesh>
+      {/* Back Left */}
+      <mesh ref={wheelBL} position={[-0.56, -0.12, -0.55]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.2, 0.2, 0.15, 12]} />
+        <meshStandardMaterial color="#0a0a0f" roughness={0.9} />
+      </mesh>
+      {/* Back Right */}
+      <mesh ref={wheelBR} position={[0.56, -0.12, -0.55]} rotation={[0, 0, Math.PI / 2]}>
+        <cylinderGeometry args={[0.2, 0.2, 0.15, 12]} />
+        <meshStandardMaterial color="#0a0a0f" roughness={0.9} />
+      </mesh>
+    </group>
+  );
+}
+
+// Infinite Scrolling Asphalt Road and Curb lines
+function ScrollingRoad() {
+  const dividersRef = useRef<THREE.Group>(null);
+  const roadSpeed = 0.18; // Speed matching building parallax scroll
+
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime();
+    if (dividersRef.current) {
+      // Loop the dividers infinitely
+      dividersRef.current.position.z = (time * roadSpeed * 60) % 6.0;
     }
+  });
 
-    // 3. Boundary constraints (keep spheres in bounds)
-    const limitX = state.viewport.width / 2 - 0.7;
-    const limitY = state.viewport.height / 2 - 0.7;
-    
-    spheres.forEach((s) => {
-      if (Math.abs(s.pos.x) > limitX) {
-        s.pos.x = Math.sign(s.pos.x) * limitX;
-        s.vel.x *= -0.4;
-      }
-      if (Math.abs(s.pos.y) > limitY) {
-        s.pos.y = Math.sign(s.pos.y) * limitY;
-        s.vel.y *= -0.4;
-      }
+  return (
+    <group>
+      {/* Main road surface */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+        <planeGeometry args={[9, 120]} />
+        <meshStandardMaterial color="#060609" roughness={0.95} />
+      </mesh>
+
+      {/* Sidewalk boundary curbs */}
+      <mesh position={[-2.8, 0.05, 0]} receiveShadow>
+        <boxGeometry args={[0.15, 0.1, 120]} />
+        <meshStandardMaterial color="#1a1a24" roughness={0.8} />
+      </mesh>
+      <mesh position={[2.8, 0.05, 0]} receiveShadow>
+        <boxGeometry args={[0.15, 0.1, 120]} />
+        <meshStandardMaterial color="#1a1a24" roughness={0.8} />
+      </mesh>
+
+      {/* Scrolling central divider dashed lines */}
+      <group ref={dividersRef}>
+        {[...Array(20)].map((_, idx) => {
+          const z = -idx * 6.0;
+          return (
+            <mesh key={idx} position={[0, 0.02, z]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[0.12, 1.2]} />
+              <meshBasicMaterial color="#00D4FF" transparent opacity={0.3} />
+            </mesh>
+          );
+        })}
+      </group>
+    </group>
+  );
+}
+
+function TechBuildings({ skills, colorMap }: { skills: string[]; colorMap: Record<string, string> }) {
+  const scrollSpeed = 0.18; // parallax scrolling speed
+
+  // Setup buildings mapped onto alternating sides of the street
+  const buildings = useMemo(() => {
+    return skills.map((skill, idx) => {
+      const isLeft = idx % 2 === 0;
+      const x = isLeft ? -4.2 : 4.2;
+      const z = -idx * 9.0; // Staggered along depth
+      const height = 4.0 + Math.random() * 2.8;
+      
+      const ref = { current: null as THREE.Group | null };
+      
+      return {
+        name: skill,
+        x,
+        z,
+        height,
+        ref
+      };
     });
+  }, [skills]);
 
-    // 4. Commit coords to Three meshes and spin them
-    spheres.forEach((s) => {
-      if (s.meshRef.current) {
-        s.pos.z = 0; // Flatten on Z axis
-        s.meshRef.current.position.copy(s.pos);
-        s.meshRef.current.rotation.x += 0.003 + s.vel.y * 0.04;
-        s.meshRef.current.rotation.y += 0.003 + s.vel.x * 0.04;
+  useFrame(() => {
+    const count = buildings.length;
+    buildings.forEach((b) => {
+      b.z += scrollSpeed;
+      // Wrap around when building passes behind camera
+      if (b.z > 8) {
+        b.z = -count * 9.0 + 8;
+        b.height = 4.0 + Math.random() * 2.8; // Randomize next height
+      }
+
+      if (b.ref.current) {
+        b.ref.current.position.set(b.x, b.height / 2, b.z);
       }
     });
   });
 
   return (
     <group>
-      {/* Floating light that tracks the cursor to highlight ball curves */}
-      <pointLight ref={mouseLightRef} intensity={4.5} distance={12} color="#ffffff" />
-      
-      {spheres.map((s, idx) => (
-        <mesh ref={s.meshRef} key={idx} castShadow receiveShadow>
-          <sphereGeometry args={[s.radius, 32, 32]} />
-          <meshPhysicalMaterial
-            map={s.texture}
-            roughness={0.06}
-            metalness={0.05}
-            clearcoat={1.0}
-            clearcoatRoughness={0.05}
-            reflectivity={0.98}
-          />
-        </mesh>
-      ))}
+      {buildings.map((b, idx) => {
+        // Tag categories
+        const isDesign = ['three.js', 'gsap', 'html5/css3', 'tailwind css'].includes(b.name.toLowerCase());
+        const color = colorMap[b.name] || '#6C63FF';
+
+        return (
+          <group ref={b.ref} key={idx} position={[b.x, b.height / 2, b.z]}>
+            {/* Building Mesh */}
+            <mesh castShadow receiveShadow>
+              <boxGeometry args={[1.8, b.height, 1.8]} />
+              <meshStandardMaterial color="#101017" roughness={0.8} metalness={0.15} />
+            </mesh>
+
+            {/* Glowing neon backdrop backing the billboard */}
+            <mesh
+              position={[b.x < 0 ? 0.91 : -0.91, 0, 0]}
+              rotation={[0, b.x < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
+            >
+              <planeGeometry args={[1.6, 0.9]} />
+              <meshBasicMaterial color={color} transparent opacity={0.1} />
+            </mesh>
+
+            {/* 3D Projected Interactive Billboard Tag */}
+            <Html
+              position={[b.x < 0 ? 0.95 : -0.95, 0, 0]}
+              rotation={[0, b.x < 0 ? Math.PI / 2 : -Math.PI / 2, 0]}
+              transform
+              occlude
+              distanceFactor={6.2}
+            >
+              <div
+                className="px-4 py-2 rounded-lg border text-center font-mono select-none transition-all duration-300 w-36 hover:scale-105 active:scale-95"
+                style={{
+                  backgroundColor: '#0a0a0f',
+                  borderColor: color,
+                  color: color,
+                  boxShadow: `0 0 15px ${color}35`
+                }}
+              >
+                <div className="text-xs font-black tracking-widest truncate">{b.name.toUpperCase()}</div>
+                <div className="text-[7px] opacity-70 tracking-wider mt-1 uppercase font-semibold">
+                  {isDesign ? 'DESIGN / FRONTEND' : 'DEVELOP / BACKEND'}
+                </div>
+              </div>
+            </Html>
+          </group>
+        );
+      })}
     </group>
   );
 }
@@ -192,7 +253,7 @@ const TechStack = () => {
     'TypeScript': '#3178c6',
     'Node.js': '#339933',
     'Python': '#3776ab',
-    'Three.js': '#6366f1',
+    'Three.js': '#fbbf24',
     'GSAP': '#88ce02',
     'REST APIs': '#ff6c37',
     'Git': '#f05032',
@@ -200,42 +261,13 @@ const TechStack = () => {
     'Tailwind CSS': '#38bdf8',
     'HTML5/CSS3': '#e34f26',
     'FastAPI': '#009688',
-    'Next.js': '#05050a',
-    'MongoDB': '#47A248',
-    'PostgreSQL': '#4169E1',
-    'AWS': '#FF9900',
-    'Express': '#333333',
-    'GraphQL': '#E10098'
+    'Next.js': '#a855f7',
+    'MongoDB': '#10b981',
+    'PostgreSQL': '#3b82f6',
+    'AWS': '#f97316',
+    'Express': '#6b7280',
+    'GraphQL': '#ec4899',
   };
-
-  // Generate canvas textures
-  const textures = useMemo(() => {
-    return skills.map(skill => createTechTexture(skill, colorMap[skill] || '#6C63FF'));
-  }, [skills]);
-
-  // Setup initial coordinates (Slightly larger radius)
-  const spheres = useMemo(() => {
-    return skills.map((skill, idx) => {
-      const angle = (idx / skills.length) * Math.PI * 2;
-      const radius = 2.6;
-      
-      const meshRef = { current: null as THREE.Mesh | null };
-      
-      return {
-        name: skill,
-        radius: 0.84, // Slightly larger spheres
-        pos: new THREE.Vector3(
-          Math.cos(angle) * radius + (Math.random() - 0.5) * 0.4,
-          Math.sin(angle) * radius * 0.75 + (Math.random() - 0.5) * 0.4,
-          0
-        ),
-        vel: new THREE.Vector3(0, 0, 0),
-        meshRef,
-        texture: textures[idx],
-        color: colorMap[skill] || '#6C63FF'
-      };
-    });
-  }, [skills, textures]);
 
   return (
     <section
@@ -243,26 +275,40 @@ const TechStack = () => {
       ref={containerRef}
       className="py-20 md:py-36 px-6 md:px-12 max-w-6xl mx-auto overflow-hidden relative select-none"
     >
-      {/* Giant Background Monospace Title (Faint transparency overlay) */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full text-center pointer-events-none select-none z-0">
-        <h2 className="font-heading font-black text-5xl sm:text-7xl md:text-9xl text-white/[0.02] tracking-[0.25em] leading-none uppercase">
-          MY TECHSTACK
-        </h2>
+      {/* Title */}
+      <div className="flex flex-col items-center text-center mb-10 relative z-10">
+        <div className="flex items-center gap-2 mb-4 justify-center">
+          <span className="w-10 h-[2px] bg-[#00D4FF]"></span>
+          <span className="font-mono text-sm tracking-widest text-[#00D4FF] uppercase font-semibold">
+            Skills
+          </span>
+          <span className="w-10 h-[2px] bg-[#00D4FF]"></span>
+        </div>
+        
+        <h3 className="text-3xl md:text-5xl font-heading font-extrabold text-white mb-4">
+          Tech Drive
+        </h3>
+        
+        <p className="text-[#6B6B80] max-w-lg font-sans text-xs md:text-sm">
+          A low-poly retro car cruises down an infinite street of technology skills. Interact with the neon building banners as they scroll by!
+        </p>
       </div>
 
-      {/* 3D Physics Canvas Container */}
-      <div className="reveal-item w-full h-[55vh] md:h-[70vh] relative z-10 overflow-hidden flex items-center justify-center">
+      {/* 3D Scene Viewport */}
+      <div className="reveal-item w-full h-[55vh] md:h-[70vh] relative z-10 overflow-hidden flex items-center justify-center border border-[#1E1E2E]/60 bg-[#060609]/60 rounded-2xl">
         <Canvas
           shadows
-          camera={{ position: [0, 0, 9.0], fov: 45 }}
+          camera={{ position: [0, 2.0, 5.8], fov: 45 }}
           gl={{ alpha: true, antialias: true }}
-          onCreated={(state) => (state.gl.toneMappingExposure = 1.2)}
-          className="w-full h-full"
         >
-          <ambientLight intensity={0.7} />
-          <spotLight position={[20, 20, 25]} penumbra={1} angle={0.2} castShadow />
-          <directionalLight position={[-5, 5, -5]} intensity={0.3} />
-          <PhysicsContainer spheres={spheres} />
+          <ambientLight intensity={0.65} />
+          {/* Neon sky pink background light */}
+          <directionalLight position={[0, 10, -10]} intensity={1.0} color="#6C63FF" />
+          <spotLight position={[0, 20, 20]} penumbra={1} intensity={1.5} castShadow />
+          
+          <ScrollingRoad />
+          <CyberCar />
+          <TechBuildings skills={skills} colorMap={colorMap} />
         </Canvas>
       </div>
     </section>
