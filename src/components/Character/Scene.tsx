@@ -11,29 +11,57 @@ import {
   handleTouchMove,
 } from "./utils/mouseUtils";
 import setAnimations from "./utils/animationUtils";
+
 const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
   const canvasDiv = useRef<HTMLDivElement | null>(null);
   const hoverDivRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef(new THREE.Scene());
   const { setLoading } = useLoading();
-
+  
+  const [hasWebGL, setHasWebGL] = useState(true);
   const [character, setChar] = useState<THREE.Object3D | null>(null);
+  const isVisibleRef = useRef(true);
+
+  // Intersection Observer to pause rendering when canvas is off-screen
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        isVisibleRef.current = entry.isIntersecting;
+      },
+      { threshold: 0.05 }
+    );
+    if (canvasDiv.current) {
+      observer.observe(canvasDiv.current);
+    }
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     if (canvasDiv.current) {
       let rect = canvasDiv.current.getBoundingClientRect();
       let container = { width: rect.width, height: rect.height };
       const aspect = container.width / container.height;
       const scene = sceneRef.current;
+      
+      const isMobile = window.innerWidth < 768;
+      let renderer: THREE.WebGLRenderer | undefined;
 
-      const renderer = new THREE.WebGLRenderer({
-        alpha: true,
-        antialias: true,
-      });
-      renderer.setSize(container.width, container.height);
-      renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1;
-      canvasDiv.current.appendChild(renderer.domElement);
+      try {
+        renderer = new THREE.WebGLRenderer({
+          alpha: true,
+          antialias: !isMobile, // Disable antialiasing on mobile to speed up rendering
+        });
+        renderer.setSize(container.width, container.height);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2.0));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1;
+        canvasDiv.current.appendChild(renderer.domElement);
+      } catch (e) {
+        console.warn("WebGL creation failed, falling back to static image:", e);
+        setHasWebGL(false);
+        setLoading(100);
+        return;
+      }
 
       const camera = new THREE.PerspectiveCamera(14.5, aspect, 0.1, 1000);
       camera.position.z = 10;
@@ -54,59 +82,67 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       const light = setLighting(scene);
       const { loadCharacter } = setCharacter(renderer, scene, camera);
 
-      loadCharacter().then((gltf) => {
-        if (gltf) {
-          const animations = setAnimations(gltf);
-          hoverDivRef.current && animations.hover(gltf, hoverDivRef.current);
-          mixer = animations.mixer;
-          let character = gltf.scene;
+      loadCharacter()
+        .then((gltf) => {
+          if (gltf) {
+            const animations = setAnimations(gltf);
+            hoverDivRef.current && animations.hover(gltf, hoverDivRef.current);
+            mixer = animations.mixer;
+            let character = gltf.scene;
 
-          if (view === "about") {
-            // Portrait close-up view facing camera slightly
-            character.rotation.set(0, 0.7, 0);
-          } else {
-            // Align to typing desk immediately
-            character.rotation.set(0.12, 0.92, 0);
-            const neckBone = character.getObjectByName("spine005");
-            if (neckBone) {
-              neckBone.rotation.x = 0.6;
+            if (view === "about") {
+              // Portrait close-up view facing camera slightly
+              character.rotation.set(0, 0.7, 0);
+            } else {
+              // Align to typing desk immediately
+              character.rotation.set(0.12, 0.92, 0);
+              const neckBone = character.getObjectByName("spine005");
+              if (neckBone) {
+                neckBone.rotation.x = 0.6;
+              }
+
+              // Force monitor screen glow materials to be visible instantly
+              character.traverse((child: any) => {
+                if (child.name === "screenlight" && child.material) {
+                  child.material.transparent = true;
+                  child.material.opacity = 1;
+                }
+                if (child.isMesh && child.material && child.material.name === "Material.027") {
+                  child.material.transparent = true;
+                  child.material.opacity = 1;
+                }
+              });
             }
 
-            // Force monitor screen glow materials to be visible instantly
-            character.traverse((child: any) => {
-              if (child.name === "screenlight" && child.material) {
-                child.material.transparent = true;
-                child.material.opacity = 1;
+            setChar(character);
+            scene.add(character);
+            headBone = character.getObjectByName("spine006") || null;
+            screenLight = character.getObjectByName("screenlight") || null;
+            setLoading(100);
+
+            // Turn on lights and begin animations
+            light.turnOnLights();
+            if (view === "about") {
+              const blink = gltf.animations.find((clip) => clip.name === "Blink");
+              if (blink) {
+                mixer.clipAction(blink).play();
               }
-              if (child.isMesh && child.material && child.material.name === "Material.027") {
-                child.material.transparent = true;
-                child.material.opacity = 1;
+            } else {
+              animations.startIntro();
+            }
+
+            window.addEventListener("resize", () => {
+              if (renderer) {
+                handleResize(renderer, camera, canvasDiv, character);
               }
             });
           }
-
-          setChar(character);
-          scene.add(character);
-          headBone = character.getObjectByName("spine006") || null;
-          screenLight = character.getObjectByName("screenlight") || null;
+        })
+        .catch((err) => {
+          console.error("Failed to load character, falling back to static:", err);
+          setHasWebGL(false);
           setLoading(100);
-
-          // Turn on lights and begin animations
-          light.turnOnLights();
-          if (view === "about") {
-            const blink = gltf.animations.find((clip) => clip.name === "Blink");
-            if (blink) {
-              mixer.clipAction(blink).play();
-            }
-          } else {
-            animations.startIntro();
-          }
-
-          window.addEventListener("resize", () =>
-            handleResize(renderer, camera, canvasDiv, character)
-          );
-        }
-      });
+        });
 
       let mouse = { x: 0, y: 0 },
         interpolation = { x: 0.1, y: 0.2 };
@@ -131,16 +167,20 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
         });
       };
 
-      document.addEventListener("mousemove", (event) => {
-        onMouseMove(event);
-      });
+      document.addEventListener("mousemove", onMouseMove);
       const landingDiv = document.getElementById("landingDiv");
       if (landingDiv) {
         landingDiv.addEventListener("touchstart", onTouchStart);
         landingDiv.addEventListener("touchend", onTouchEnd);
       }
+
+      let animationFrameId: number;
       const animate = () => {
-        requestAnimationFrame(animate);
+        animationFrameId = requestAnimationFrame(animate);
+        
+        // PAUSE loops when container is scrolled out of view to ensure 60fps scrolling
+        if (!isVisibleRef.current) return;
+
         if (headBone) {
           handleHeadRotation(
             headBone,
@@ -156,27 +196,49 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
         if (mixer) {
           mixer.update(delta);
         }
-        renderer.render(scene, camera);
+        if (renderer) {
+          renderer.render(scene, camera);
+        }
       };
       animate();
+
       return () => {
+        cancelAnimationFrame(animationFrameId);
         clearTimeout(debounce);
         scene.clear();
-        renderer.dispose();
-        window.removeEventListener("resize", () =>
-          handleResize(renderer, camera, canvasDiv, character!)
-        );
-        if (canvasDiv.current) {
-          canvasDiv.current.removeChild(renderer.domElement);
+        if (renderer) {
+          renderer.dispose();
+          if (canvasDiv.current && renderer.domElement && canvasDiv.current.contains(renderer.domElement)) {
+            canvasDiv.current.removeChild(renderer.domElement);
+          }
         }
+        window.removeEventListener("resize", () => {
+          if (renderer && character) {
+            handleResize(renderer, camera, canvasDiv, character);
+          }
+        });
+        document.removeEventListener("mousemove", onMouseMove);
         if (landingDiv) {
-          document.removeEventListener("mousemove", onMouseMove);
           landingDiv.removeEventListener("touchstart", onTouchStart);
           landingDiv.removeEventListener("touchend", onTouchEnd);
         }
       };
     }
-  }, []);
+  }, [view]);
+
+  if (!hasWebGL) {
+    return (
+      <div className="character-container flex items-center justify-center">
+        <div className="w-[240px] md:w-[320px] h-auto pointer-events-none select-none relative z-10">
+          <img
+            src="/developer_3d.png"
+            alt="3D Developer fallback"
+            className="w-full h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

@@ -8,10 +8,11 @@ import { PORTFOLIO } from '../../data/portfolio';
 interface SphereProps {
   mouseRef: React.MutableRefObject<{ x: number; y: number }>;
   isMobile: boolean;
+  isHeroVisible: boolean;
 }
 
 // Interactive 3D Solar System centerpiece with a glowing real Sun, planets, and moons
-function DualRotatingSphere({ mouseRef, isMobile }: SphereProps) {
+function DualRotatingSphere({ mouseRef, isMobile, isHeroVisible }: SphereProps) {
   const modelGroupRef = useRef<THREE.Group>(null);
   
   const sunRef = useRef<THREE.Mesh>(null);
@@ -53,6 +54,9 @@ function DualRotatingSphere({ mouseRef, isMobile }: SphereProps) {
   }, [flareParticlesCount]);
 
   useFrame((state) => {
+    // PAUSE loops when container is scrolled out of view to ensure 60fps scrolling
+    if (!isHeroVisible) return;
+
     const time = state.clock.getElapsedTime();
     const { x, y } = mouseRef.current;
 
@@ -369,8 +373,23 @@ const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showCanvas, setShowCanvas] = useState(false);
   const mouseRef = useRef({ x: 0, y: 0 });
+  const [isHeroVisible, setIsHeroVisible] = useState(true);
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // Intersection Observer to monitor Hero section visibility
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsHeroVisible(entry.isIntersecting);
+      },
+      { threshold: 0.05 }
+    );
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   // Split name for two lines
   const nameParts = useMemo(() => {
@@ -464,7 +483,7 @@ const Hero = () => {
               {/* Static background contrast lights */}
               <pointLight position={[-6, 6, 4]} intensity={6} color="#6C63FF" />
               <pointLight position={[6, -6, 4]} intensity={6} color="#00D4FF" />
-              <DualRotatingSphere mouseRef={mouseRef} isMobile={isMobile} />
+              <DualRotatingSphere mouseRef={mouseRef} isMobile={isMobile} isHeroVisible={isHeroVisible} />
             </Canvas>
           )}
         </div>
