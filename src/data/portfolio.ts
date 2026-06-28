@@ -6,8 +6,8 @@ export const PORTFOLIO = {
   email: "parisesumit86@gmail.com",
   github: "https://github.com/SumitParise",
   linkedin: "https://linkedin.com/in/sumitparise",
-  twitter: "https://x.com/sumitparise",
-  instagram: "https://instagram.com/sumitparise",
+  twitter: "https://x.com/SumitParise49",
+  instagram: "https://www.instagram.com/sumit_11.jsx?igsh=MWw0djRhbGY5c3Rjcw==",
   resume: "/resume.pdf",
   skills: [
     "React", "TypeScript", "Node.js", "Python",
