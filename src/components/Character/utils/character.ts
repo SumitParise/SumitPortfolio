@@ -38,6 +38,13 @@ const setCharacter = (
 
                 const nameLower = child.name.toLowerCase();
 
+                // Force smile morph shape on the mouth mesh
+                if (nameLower.includes("plane") && nameLower.includes("007")) {
+                  if (child.morphTargetInfluences) {
+                    child.morphTargetInfluences[0] = 1.0;
+                  }
+                }
+
                 // Stylize character clothing and cap for a stylish coder aesthetic
                 if (
                   nameLower.includes("shirt") || 
