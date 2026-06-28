@@ -1,0 +1,161 @@
+@import './variables.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Inter', sans-serif;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  code, pre, .tech-tag {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* Breathing Aurora Gradient Animation */
+@keyframes aurora-breath-1 {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: translate(10%, -15%) scale(1.2);
+    opacity: 0.22;
+  }
+  100% {
+    transform: translate(-5%, 5%) scale(0.9);
+    opacity: 0.15;
+  }
+}
+
+@keyframes aurora-breath-2 {
+  0% {
+    transform: translate(0%, 0%) scale(1);
+    opacity: 0.12;
+  }
+  50% {
+    transform: translate(-12%, 10%) scale(0.85);
+    opacity: 0.2;
+  }
+  100% {
+    transform: translate(8%, -5%) scale(1.15);
+    opacity: 0.12;
+  }
+}
+
+.aurora-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.aurora-glow-violet {
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-accent) 0%, rgba(108, 99, 255, 0) 70%);
+  filter: blur(80px);
+  top: -10%;
+  left: 15%;
+  animation: aurora-breath-1 20s infinite alternate ease-in-out;
+}
+
+.aurora-glow-cyan {
+  position: absolute;
+  width: 700px;
+  height: 700px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-accent-2) 0%, rgba(0, 212, 255, 0) 70%);
+  filter: blur(90px);
+  bottom: 10%;
+  right: 10%;
+  animation: aurora-breath-2 25s infinite alternate ease-in-out;
+}
+
+/* Custom Cursor Styles for non-touch devices */
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  
+  a, button, select, input, textarea, [role="button"], .interactive-element {
+    cursor: none;
+  }
+}
+
+.custom-cursor-dot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-accent-2);
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10000;
+  mix-blend-mode: difference;
+}
+
+.custom-cursor-ring {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--color-accent);
+  border-radius: 50%;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Card hover glow and lift */
+.project-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s, box-shadow 0.3s;
+}
+
+.project-card:hover {
+  transform: translateY(-6px);
+  border-color: var(--color-accent-2);
+  box-shadow: 0 10px 30px -10px rgba(0, 212, 255, 0.15),
+              0 1px 15px 0px rgba(108, 99, 255, 0.05);
+}
+
+/* Accent Glow Border for experience and hover states */
+.glow-accent-hover:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 15px rgba(108, 99, 255, 0.2);
+}
