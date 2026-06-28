@@ -15,7 +15,7 @@ const Experience = () => {
     if (!container || !line) return;
 
     const ctx = gsap.context(() => {
-      // 1. Animate drawing the vertical timeline line
+      // 1. Animate drawing the vertical timeline line (scrub: 1 for smooth transition)
       gsap.fromTo(
         line,
         { height: '0%' },
@@ -24,9 +24,9 @@ const Experience = () => {
           ease: 'none',
           scrollTrigger: {
             trigger: container,
-            start: 'top 30%',
-            end: 'bottom 70%',
-            scrub: true,
+            start: 'top 25%',
+            end: 'bottom 75%',
+            scrub: 1,
           },
         }
       );
@@ -34,35 +34,69 @@ const Experience = () => {
       // 2. Animate timeline item blocks fade & slide in
       const items = container.querySelectorAll('.timeline-item');
       items.forEach((item) => {
+        // Left Column (Role & Company) - slides in from the left
         gsap.fromTo(
-          item.querySelectorAll('.reveal-fade'),
-          { opacity: 0, y: 15 },
+          item.querySelector('.reveal-left'),
+          { opacity: 0, x: -30 },
           {
             opacity: 1,
-            y: 0,
-            duration: 1,
-            stagger: 0.1,
-            ease: 'power3.out',
+            x: 0,
+            duration: 1.2,
+            ease: 'power4.out',
             scrollTrigger: {
               trigger: item,
-              start: 'top 80%',
+              start: 'top 85%',
               toggleActions: 'play none none none',
             },
           }
         );
 
-        // Animate the timeline node dots
+        // Right Column (Description) - slides in from the right
+        gsap.fromTo(
+          item.querySelector('.reveal-right'),
+          { opacity: 0, x: 30 },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 1.2,
+            ease: 'power4.out',
+            scrollTrigger: {
+              trigger: item,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+
+        // Year Label - scales and fades in
+        gsap.fromTo(
+          item.querySelector('.reveal-year'),
+          { opacity: 0, scale: 0.8 },
+          {
+            opacity: 1,
+            scale: 1,
+            duration: 0.8,
+            ease: 'back.out(1.5)',
+            scrollTrigger: {
+              trigger: item,
+              start: 'top 85%',
+              toggleActions: 'play none none none',
+            },
+          }
+        );
+
+        // Timeline Node Dot - springy scale in
         gsap.fromTo(
           item.querySelector('.timeline-dot'),
           { scale: 0, opacity: 0 },
           {
             scale: 1,
             opacity: 1,
-            duration: 0.5,
+            duration: 0.6,
             ease: 'back.out(2)',
             scrollTrigger: {
               trigger: item,
-              start: 'top 80%',
+              start: 'top 85%',
               toggleActions: 'play none none none',
             },
           }
@@ -113,36 +147,36 @@ const Experience = () => {
         ></div>
 
         {/* Timeline Entries */}
-        <div className="space-y-20">
+        <div className="space-y-24">
           {PORTFOLIO.experience.map((exp, idx) => (
             <div
               key={idx}
-              className="relative timeline-item w-full grid grid-cols-1 md:grid-cols-[1fr_120px_1fr] gap-6 md:gap-0 items-start"
+              className="relative timeline-item w-full grid grid-cols-1 md:grid-cols-[1fr_120px_1.2fr] items-start min-h-[120px]"
             >
               {/* Left Column: Role and Company (Desktop: aligns right, Mobile: stacked on right) */}
-              <div className="reveal-fade md:text-right md:pr-10 pl-12 md:pl-0">
-                <h4 className="text-xl md:text-2xl font-heading font-extrabold text-white mb-1.5 leading-tight">
+              <div className="reveal-left md:text-right md:pr-10 pl-12 md:pl-0 opacity-0">
+                <h4 className="text-lg md:text-xl font-heading font-extrabold text-white mb-1.5 leading-tight">
                   {exp.role}
                 </h4>
-                <h5 className="text-sm md:text-base font-mono text-[#6C63FF] font-medium uppercase tracking-wider">
+                <h5 className="text-xs md:text-sm font-mono text-[#6C63FF] font-semibold uppercase tracking-wider">
                   {exp.company}
                 </h5>
               </div>
 
               {/* Center Column: Year and Dot */}
-              <div className="absolute md:relative left-0 md:left-auto top-1.5 md:top-auto flex md:flex-row items-center justify-start md:justify-center w-full h-full">
-                {/* Year Indicator (Desktop: shown left of line, Mobile: shown top) */}
-                <span className="font-heading font-extrabold text-2xl md:text-3xl text-white/90 md:mr-6 absolute left-12 md:left-auto md:relative top-[-4px] md:top-auto select-none">
+              <div className="absolute md:relative left-0 md:left-auto top-1.5 md:top-auto w-12 md:w-full h-full flex justify-center">
+                {/* Year Indicator (Desktop: aligned left of center line, Mobile: aligned left beside dot) */}
+                <span className="reveal-year font-heading font-black text-xl md:text-2xl text-white select-none absolute md:right-[calc(50%+20px)] left-12 md:left-auto top-[-2px] md:top-auto opacity-0 scale-90">
                   {getYear(exp.period)}
                 </span>
                 
-                {/* Timeline node dot */}
-                <div className="timeline-dot w-4 h-4 rounded-full bg-[#0a0a0f] border-2 border-[#00D4FF] shadow-[0_0_8px_rgba(0,212,255,0.4)] z-10 absolute left-4 md:left-[50%] transform -translate-x-1/2 opacity-0 scale-0"></div>
+                {/* Timeline node dot (exactly on the line) */}
+                <div className="timeline-dot w-3.5 h-3.5 rounded-full bg-[#0a0a0f] border-2 border-[#00D4FF] shadow-[0_0_8px_rgba(0,212,255,0.5)] z-10 absolute left-4 md:left-1/2 transform -translate-x-1/2 opacity-0 scale-0"></div>
               </div>
 
               {/* Right Column: Description */}
-              <div className="reveal-fade pl-12 md:pl-10 md:pt-1">
-                <p className="text-[#6B6B80] font-sans text-sm md:text-base leading-relaxed max-w-md">
+              <div className="reveal-right pl-12 md:pl-10 md:pt-1 opacity-0">
+                <p className="text-[#6B6B80] font-sans text-xs md:text-sm leading-relaxed max-w-md">
                   {exp.description}
                 </p>
               </div>
