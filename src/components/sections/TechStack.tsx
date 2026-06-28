@@ -10,7 +10,6 @@ const TechStack = () => {
 
   const skills = PORTFOLIO.skills;
 
-  // Classify skills into categories for the sign boards
   const skillCategories: Record<string, 'DEVELOP' | 'DESIGN'> = {
     'React': 'DEVELOP',
     'TypeScript': 'DEVELOP',
@@ -32,20 +31,33 @@ const TechStack = () => {
     'GraphQL': 'DEVELOP',
   };
 
-  // Staggered delay for each billboard to pass sequentially
-  const billboardDuration = 18; // total loop seconds
-  const billboards = useMemo(() => {
-    return skills.map((skill, idx) => ({
-      name: skill,
-      category: skillCategories[skill] || 'DEVELOP',
-      delay: (idx * (billboardDuration / skills.length))
-    }));
+  // Staggered delay for each building to pass sequentially
+  const scrollDuration = 22; // total loop duration in seconds
+  const streetItems = useMemo(() => {
+    return skills.map((skill, idx) => {
+      const category = skillCategories[skill] || 'DEVELOP';
+      // Alternate left/right, heights, and styles
+      const heightClass = idx % 3 === 0 ? 'h-32 md:h-48' : idx % 3 === 1 ? 'h-40 md:h-56' : 'h-48 md:h-64';
+      const buildingStyle = idx % 2 === 0 ? 'rounded-t-lg' : 'rounded-t-none';
+      return {
+        name: skill,
+        category,
+        delay: (idx * (scrollDuration / skills.length)),
+        heightClass,
+        buildingStyle
+      };
+    });
   }, [skills]);
 
-  // Handle speed and pause play states
+  // Birds config with staggered loops
+  const birds = [
+    { delay: 0, top: '15%', size: 'scale-[0.6]', duration: 16 },
+    { delay: 4, top: '25%', size: 'scale-[0.5]', duration: 20 },
+    { delay: 9, top: '10%', size: 'scale-[0.7]', duration: 14 }
+  ];
+
   const animationStyle = {
     animationPlayState: isPaused ? 'paused' : 'running',
-    // Scale duration based on selected speed
     '--speed-multiplier': `${1 / speed}`,
   } as React.CSSProperties;
 
@@ -55,44 +67,56 @@ const TechStack = () => {
       ref={containerRef}
       className="py-20 md:py-36 px-6 md:px-12 max-w-6xl mx-auto overflow-hidden relative select-none"
     >
-      {/* Scoped CSS Styles for Parallax Scenery and Scrolling */}
+      {/* Scoped Keyframes for Parallax, Flapping, and Pedaling */}
       <style dangerouslySetInnerHTML={{ __html: `
-        @keyframes scroll-bg {
+        @keyframes scroll-scenery {
           0% { transform: translate3d(0, 0, 0); }
           100% { transform: translate3d(-50%, 0, 0); }
         }
-        @keyframes billboard-pass {
+        @keyframes building-pass {
           0% { transform: translate3d(600px, 0, 0); opacity: 0; }
-          5% { opacity: 1; }
-          95% { opacity: 1; }
+          4% { opacity: 1; }
+          96% { opacity: 1; }
           100% { transform: translate3d(-1000px, 0, 0); opacity: 0; }
         }
-        @keyframes car-bob {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-3px); }
+        @keyframes wing-flap {
+          0%, 100% { transform: scaleY(1.0); }
+          50% { transform: scaleY(-0.7); }
         }
-        @keyframes cloud-float {
-          0% { transform: translate3d(100%, 0, 0); }
-          100% { transform: translate3d(-150%, 0, 0); }
+        @keyframes bird-fly {
+          0% { transform: translate3d(600px, 0, 0); }
+          100% { transform: translate3d(-1000px, 0, 0); }
+        }
+        @keyframes rider-pedal-bob {
+          0%, 100% { transform: translate3d(0, 0, 0); }
+          50% { transform: translate3d(0, -2.5px, 0); }
+        }
+        @keyframes spinner {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(36deg); }
         }
 
         .animate-scroll-clouds {
-          animation: scroll-bg calc(45s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery calc(48s * var(--speed-multiplier)) linear infinite;
         }
-        .animate-scroll-hills-far {
-          animation: scroll-bg calc(24s * var(--speed-multiplier)) linear infinite;
-        }
-        .animate-scroll-hills-near {
-          animation: scroll-bg calc(14s * var(--speed-multiplier)) linear infinite;
+        .animate-scroll-hills {
+          animation: scroll-scenery calc(28s * var(--speed-multiplier)) linear infinite;
         }
         .animate-scroll-road {
-          animation: scroll-bg calc(1.8s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery calc(1.5s * var(--speed-multiplier)) linear infinite;
         }
-        .animate-car-bob {
-          animation: car-bob 0.15s linear infinite;
+        .animate-rider-bob {
+          animation: rider-pedal-bob calc(0.4s * var(--speed-multiplier)) ease-in-out infinite;
         }
-        .animate-billboard {
-          animation: billboard-pass calc(${billboardDuration}s * var(--speed-multiplier)) linear infinite;
+        .animate-wing-flap {
+          animation: wing-flap 0.35s ease-in-out infinite;
+          transform-origin: center;
+        }
+        .animate-bird-fly {
+          animation: bird-fly calc(var(--fly-duration) * var(--speed-multiplier)) linear infinite;
+        }
+        .animate-building {
+          animation: building-pass calc(${scrollDuration}s * var(--speed-multiplier)) linear infinite;
         }
       `}} />
 
@@ -107,90 +131,96 @@ const TechStack = () => {
         </div>
         
         <h3 className="text-3xl md:text-5xl font-heading font-extrabold text-white mb-4">
-          Tech Highway
+          Tech Commute
         </h3>
         
         <p className="text-[#6B6B80] max-w-lg font-sans text-xs md:text-sm">
-          Sumit is driving down Earth's technology highway. Toggle between Day/Night, adjust the speed, or hover over the signs to inspect the skills!
+          Sumit is pedaling along the city street on his bicycle. Watch the birds fly and inspect the skills listed on passing buildings!
         </p>
       </div>
 
       {/* 2D Landscape Viewport */}
       <div
-        className={`reveal-item w-full h-[40vh] md:h-[50vh] border border-[#1E1E2E]/60 rounded-2xl relative overflow-hidden flex flex-col justify-end shadow-2xl transition-all duration-700 ${
+        className={`reveal-item w-full h-[45vh] md:h-[55vh] border border-[#1E1E2E]/60 rounded-2xl relative overflow-hidden flex flex-col justify-end shadow-2xl transition-all duration-700 ${
           isNight
-            ? 'bg-gradient-to-b from-indigo-950 via-purple-900 to-orange-800'
+            ? 'bg-gradient-to-b from-indigo-950 via-purple-900 to-orange-850'
             : 'bg-gradient-to-b from-sky-400 to-sky-100'
         }`}
       >
-        {/* Sun / Moon Horizon Element */}
+        {/* Sun / Moon */}
         <div
-          className={`absolute w-20 h-20 md:w-28 md:h-28 rounded-full left-[15%] transition-all duration-1000 ease-in-out ${
+          className={`absolute w-16 h-16 md:w-24 md:h-24 rounded-full left-[18%] transition-all duration-1000 ease-in-out ${
             isNight
-              ? 'bg-yellow-100 shadow-[0_0_40px_rgba(255,255,255,0.4)] top-[15%]'
-              : 'bg-yellow-300 shadow-[0_0_50px_rgba(253,224,71,0.6)] top-[22%]'
+              ? 'bg-yellow-100 shadow-[0_0_40px_rgba(255,255,255,0.4)] top-[12%]'
+              : 'bg-yellow-300 shadow-[0_0_45px_rgba(253,224,71,0.5)] top-[18%]'
           }`}
         ></div>
 
-        {/* Clouds Layer (Parallax 1) */}
+        {/* Flapping Birds Layer */}
+        {birds.map((b, idx) => (
+          <div
+            key={idx}
+            className={`absolute z-10 w-8 h-4 animate-bird-fly pointer-events-none select-none ${b.size}`}
+            style={{
+              ...animationStyle,
+              top: b.top,
+              animationDelay: `${b.delay * (1 / speed)}s`,
+              '--fly-duration': `${b.duration}s`,
+            } as React.CSSProperties}
+          >
+            <svg viewBox="0 0 32 16" className="w-full h-full fill-current text-neutral-800 opacity-60">
+              <path
+                className={`${!isPaused && 'animate-wing-flap'}`}
+                d="M 0,8 Q 8,0 16,8 Q 24,0 32,8"
+                stroke={isNight ? "#eae5ec" : "#000000"}
+                strokeWidth="2.5"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        ))}
+
+        {/* Clouds (Parallax 1) */}
         <div
-          className="absolute inset-x-0 top-8 h-20 opacity-40 pointer-events-none flex whitespace-nowrap animate-scroll-clouds"
+          className="absolute inset-x-0 top-8 h-20 opacity-30 pointer-events-none flex whitespace-nowrap animate-scroll-clouds"
           style={animationStyle}
         >
-          <div className="flex gap-40 shrink-0 w-full justify-around">
+          <div className="flex gap-48 shrink-0 w-full justify-around">
             <div className="w-20 h-6 bg-white rounded-full filter blur-[1px]"></div>
-            <div className="w-32 h-10 bg-white rounded-full filter blur-[2px]"></div>
-            <div className="w-24 h-8 bg-white rounded-full filter blur-[1px]"></div>
+            <div className="w-36 h-12 bg-white rounded-full filter blur-[2px]"></div>
           </div>
-          <div className="flex gap-40 shrink-0 w-full justify-around">
+          <div className="flex gap-48 shrink-0 w-full justify-around">
             <div className="w-20 h-6 bg-white rounded-full filter blur-[1px]"></div>
-            <div className="w-32 h-10 bg-white rounded-full filter blur-[2px]"></div>
-            <div className="w-24 h-8 bg-white rounded-full filter blur-[1px]"></div>
+            <div className="w-36 h-12 bg-white rounded-full filter blur-[2px]"></div>
           </div>
         </div>
 
-        {/* Mountains / Far Hills (Parallax 2) */}
+        {/* Green Hills (Parallax 2) */}
         <div
-          className="absolute inset-x-0 bottom-[60px] h-32 flex whitespace-nowrap pointer-events-none opacity-85 animate-scroll-hills-far"
+          className="absolute inset-x-0 bottom-[65px] h-24 flex whitespace-nowrap pointer-events-none opacity-80 animate-scroll-hills animate-scroll-hills"
           style={animationStyle}
         >
-          <div className="flex shrink-0 w-full" style={{ color: isNight ? '#2e1b4e' : '#4ade80' }}>
+          <div className="flex shrink-0 w-full" style={{ color: isNight ? '#241442' : '#34d399' }}>
             <svg className="w-full h-full fill-current" viewBox="0 0 100 10" preserveAspectRatio="none">
-              <path d="M0,10 Q15,4 35,8 T70,5 T100,10 L100,10 L0,10 Z" />
+              <path d="M0,10 Q25,3 50,7 T100,10 L100,10 L0,10 Z" />
             </svg>
           </div>
-          <div className="flex shrink-0 w-full" style={{ color: isNight ? '#2e1b4e' : '#4ade80' }}>
+          <div className="flex shrink-0 w-full" style={{ color: isNight ? '#241442' : '#34d399' }}>
             <svg className="w-full h-full fill-current" viewBox="0 0 100 10" preserveAspectRatio="none">
-              <path d="M0,10 Q15,4 35,8 T70,5 T100,10 L100,10 L0,10 Z" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Near Hills & Forest Trees (Parallax 3) */}
-        <div
-          className="absolute inset-x-0 bottom-[55px] h-20 flex whitespace-nowrap pointer-events-none z-10 animate-scroll-hills-near"
-          style={animationStyle}
-        >
-          <div className="flex shrink-0 w-full" style={{ color: isNight ? '#1e1136' : '#22c55e' }}>
-            <svg className="w-full h-full fill-current" viewBox="0 0 100 10" preserveAspectRatio="none">
-              <path d="M0,10 Q20,3 45,7 T80,4 T100,10 L100,10 L0,10 Z" />
-            </svg>
-          </div>
-          <div className="flex shrink-0 w-full" style={{ color: isNight ? '#1e1136' : '#22c55e' }}>
-            <svg className="w-full h-full fill-current" viewBox="0 0 100 10" preserveAspectRatio="none">
-              <path d="M0,10 Q20,3 45,7 T80,4 T100,10 L100,10 L0,10 Z" />
+              <path d="M0,10 Q25,3 50,7 T100,10 L100,10 L0,10 Z" />
             </svg>
           </div>
         </div>
 
-        {/* Highway Exit Billboards Layer */}
-        <div className="absolute inset-x-0 bottom-[60px] h-40 z-20 pointer-events-none">
-          {billboards.map((b, idx) => {
+        {/* Scenery Layer: Tech Buildings & Roadside Trees */}
+        <div className="absolute inset-x-0 bottom-[60px] h-64 z-20 pointer-events-none">
+          {streetItems.map((b, idx) => {
             const isDevelop = b.category === 'DEVELOP';
             return (
               <div
                 key={idx}
-                className="absolute bottom-0 left-0 w-44 pointer-events-auto cursor-pointer animate-billboard flex flex-col items-center select-none"
+                className="absolute bottom-0 left-0 w-40 pointer-events-auto cursor-pointer animate-building flex flex-col justify-end items-center select-none"
                 style={{
                   ...animationStyle,
                   animationDelay: `${b.delay * (1 / speed)}s`,
@@ -198,94 +228,136 @@ const TechStack = () => {
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
               >
-                {/* Green/Blue Highway Exit Sign Board */}
-                <div
-                  className={`w-full p-2.5 rounded-lg border-2 border-white/95 text-center shadow-lg font-sans text-white hover:scale-105 transition-transform duration-300 relative`}
-                  style={{
-                    backgroundColor: isDevelop ? '#056b3b' : '#005a9c', // Highway Green or Exit Blue
-                  }}
-                >
-                  <div className="flex items-center justify-between border-b border-white/20 pb-1 mb-1">
-                    <span className="text-[7px] font-bold tracking-widest uppercase">EXIT {idx + 1}</span>
-                    <span className="text-[7px] font-bold">{isDevelop ? 'DEV ↗' : 'DSN ↗'}</span>
+                <div className="flex items-end justify-center w-full relative">
+                  {/* Building Block */}
+                  <div
+                    className={`w-28 md:w-32 ${b.heightClass} ${b.buildingStyle} border-t-2 border-x border-white/10 p-3 flex flex-col justify-between relative shadow-lg group transition-all duration-300`}
+                    style={{
+                      backgroundColor: isNight ? '#11111a' : '#eae5ec', // Dark building at night, light building at day
+                    }}
+                  >
+                    {/* Skyscraper Lit Window Grids */}
+                    <div className="grid grid-cols-3 gap-2 w-full opacity-60">
+                      {[...Array(6)].map((_, wIdx) => (
+                        <div
+                          key={wIdx}
+                          className={`w-3.5 h-2.5 rounded-sm transition-all duration-500 ${
+                            isNight 
+                              ? (idx + wIdx) % 3 === 0 ? 'bg-yellow-200 shadow-md' : 'bg-neutral-800'
+                              : 'bg-white border border-neutral-300'
+                          }`}
+                        ></div>
+                      ))}
+                    </div>
+
+                    {/* Storefront / Billboard Neon Sign Banner */}
+                    <div
+                      className="w-full py-1.5 rounded border text-center font-heading font-black text-[10px] md:text-xs tracking-wider shadow-md transition-colors"
+                      style={{
+                        backgroundColor: '#0a0a0f',
+                        borderColor: isDevelop ? '#6C63FF' : '#00D4FF',
+                        color: isDevelop ? '#6C63FF' : '#00D4FF',
+                      }}
+                    >
+                      {b.name.toUpperCase()}
+                      <span className="block text-[6px] font-mono opacity-60 tracking-widest mt-0.5">
+                        {isDevelop ? 'DEV // BACK' : 'DSN // FRONT'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="text-sm font-black tracking-wide font-heading truncate">
-                    {b.name.toUpperCase()}
-                  </div>
-                  <div className="text-[7px] font-mono opacity-80 mt-0.5">
-                    {isDevelop ? 'DEVELOP / CODE' : 'DESIGN / STYLE'}
+
+                  {/* Roadside Green Tree positioned next to building */}
+                  <div className="absolute bottom-0 right-[-16px] w-6 flex flex-col items-center pointer-events-none">
+                    {/* Tree Canopy */}
+                    <div className={`w-8 h-8 rounded-full border border-white/5 shadow-md ${isNight ? 'bg-green-950' : 'bg-green-500'}`}></div>
+                    {/* Tree Trunk */}
+                    <div className="w-1 h-3 bg-amber-800"></div>
                   </div>
                 </div>
-                {/* Billboard Metal Poles */}
-                <div className="w-1.5 h-16 bg-neutral-500/80 border-r border-neutral-700/50"></div>
               </div>
             );
           })}
         </div>
 
-        {/* Road surface (Parallax 4 - Fastest) */}
+        {/* Sidewalk & Asphalt Road */}
         <div
-          className="w-[200%] h-[60px] bg-[#2d2d3a] border-t-2 border-[#1E1E2E] shrink-0 z-30 flex whitespace-nowrap animate-scroll-road"
+          className="w-[200%] h-[60px] bg-[#22222a] border-t-[4px] border-[#3b3b4f] shrink-0 z-30 flex whitespace-nowrap animate-scroll-road"
           style={animationStyle}
         >
           <div className="w-full flex items-center justify-around">
-            {[...Array(6)].map((_, idx) => (
-              <div key={idx} className="w-16 h-1.5 bg-yellow-400 rounded-full opacity-60"></div>
+            {[...Array(8)].map((_, idx) => (
+              <div key={idx} className="w-12 h-1 bg-yellow-500/50 rounded-full"></div>
             ))}
           </div>
           <div className="w-full flex items-center justify-around">
-            {[...Array(6)].map((_, idx) => (
-              <div key={idx} className="w-16 h-1.5 bg-yellow-400 rounded-full opacity-60"></div>
+            {[...Array(8)].map((_, idx) => (
+              <div key={idx} className="w-12 h-1 bg-yellow-500/50 rounded-full"></div>
             ))}
           </div>
         </div>
 
-        {/* Dynamic Vector SVG Car (Low-poly modern hatchback) */}
+        {/* Dynamic Vector SVG Cyclist (Smiling pedaling rider) */}
         <div
-          className={`absolute left-[15%] bottom-[20px] w-28 md:w-36 z-40 transition-all duration-300 select-none ${
-            !isPaused && 'animate-car-bob'
-          }`}
+          className={`absolute left-[18%] bottom-[22px] w-24 md:w-28 z-40 transition-all duration-300 select-none`}
         >
-          <svg className="w-full h-auto drop-shadow-lg" viewBox="0 0 160 70" fill="none">
-            {/* Car body - sleek red shell */}
-            <path d="M5 45 C5 35 15 35 25 35 L40 22 C45 15 55 12 75 12 L120 12 C135 12 142 22 148 30 C155 35 156 42 156 50 C156 54 150 56 142 56 L18 56 C10 56 5 52 5 45 Z" fill={isNight ? "#8b1a1a" : "#dc2626"} />
-            
-            {/* Glass windows */}
-            <path d="M48 24 L72 16 L112 16 L124 24 L115 35 L48 35 Z" fill="#00D4FF" fillOpacity="0.4" />
-            
-            {/* Driver model silhouette */}
-            <circle cx="68" cy="26" r="5" fill="#111118" />
-            <path d="M64 35 C64 31 72 31 72 35 Z" fill="#111118" />
-
-            {/* Glowing tail/headlights */}
-            <rect x="2" y="42" width="6" height="4" rx="2" fill={isNight ? "#ff3366" : "#ef4444"} />
-            <rect x="151" y="42" width="8" height="5" rx="2" fill="#ffffff" />
-            {/* Tail light beam */}
-            {isNight && (
-              <path d="M156 44 L200 35 L200 55 Z" fill="url(#headlight-gradient)" fillOpacity="0.2" />
-            )}
-
-            {/* Spinning Wheels */}
-            <g className={`${!isPaused && 'animate-spin'}`} style={{ transformOrigin: '36px 52px', animationDuration: `${0.3 * (1 / speed)}s` }}>
-              <circle cx="36" cy="52" r="13" fill="#1e1b1b" stroke="#333" strokeWidth="2" />
-              <circle cx="36" cy="52" r="6" fill="#fff" />
-              <rect x="35" y="39" width="2" height="26" fill="#fff" />
-              <rect x="23" y="51" width="26" height="2" fill="#fff" />
-            </g>
-            <g className={`${!isPaused && 'animate-spin'}`} style={{ transformOrigin: '124px 52px', animationDuration: `${0.3 * (1 / speed)}s` }}>
-              <circle cx="124" cy="52" r="13" fill="#1e1b1b" stroke="#333" strokeWidth="2" />
-              <circle cx="124" cy="52" r="6" fill="#fff" />
-              <rect x="123" y="39" width="2" height="26" fill="#fff" />
-              <rect x="111" y="51" width="26" height="2" fill="#fff" />
+          <svg className="w-full h-auto drop-shadow-md" viewBox="0 0 100 80" fill="none">
+            {/* Front Wheel (Spinning) */}
+            <g style={{
+              transformOrigin: '25px 65px',
+              animation: !isPaused ? `spinner ${0.35 * (1 / speed)}s linear infinite` : 'none'
+            }}>
+              <circle cx="25" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
+              <line x1="25" y1="54" x2="25" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
+              <line x1="14" y1="65" x2="36" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
+              <line x1="17.2" y1="57.2" x2="32.8" y2="72.8" stroke="#6B6B80" strokeWidth="0.8" />
+              <line x1="17.2" y1="72.8" x2="32.8" y2="57.2" stroke="#6B6B80" strokeWidth="0.8" />
             </g>
 
-            {/* Gradients */}
-            <defs>
-              <linearGradient id="headlight-gradient" x1="156" y1="44" x2="200" y2="45" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#fff" />
-                <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-              </linearGradient>
-            </defs>
+            {/* Back Wheel (Spinning) */}
+            <g style={{
+              transformOrigin: '75px 65px',
+              animation: !isPaused ? `spinner ${0.35 * (1 / speed)}s linear infinite` : 'none'
+            }}>
+              <circle cx="75" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
+              <line x1="75" y1="54" x2="75" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
+              <line x1="64" y1="65" x2="86" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
+              <line x1="67.2" y1="57.2" x2="82.8" y2="72.8" stroke="#6B6B80" strokeWidth="0.8" />
+              <line x1="67.2" y1="72.8" x2="82.8" y2="57.2" stroke="#6B6B80" strokeWidth="0.8" />
+            </g>
+
+            {/* Bicycle Frame */}
+            <path
+              d="M25 65 L45 65 L60 45 L75 65 M45 65 L50 40 L60 45 M50 40 L38 28"
+              stroke={isNight ? "#00D4FF" : "#6C63FF"}
+              strokeWidth="2.2"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Handlebars & Seat */}
+            <path d="M38 28 L32 28 M50 40 L45 40" stroke={isNight ? "#00D4FF" : "#6C63FF"} strokeWidth="2.0" fill="none" strokeLinecap="round" />
+
+            {/* Pedal Crank Center */}
+            <circle cx="45" cy="65" r="2.5" fill="#888" />
+
+            {/* Pedaling Smiling Rider (Bobs up/down to simulate pedal cadence) */}
+            <g className={`${!isPaused && 'animate-rider-bob'}`}>
+              {/* Torso/Body */}
+              <line x1="49" y1="40" x2="52" y2="25" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="5.0" strokeLinecap="round" />
+              
+              {/* Face/Head (Smiling!) */}
+              <circle cx="53.5" cy="18" r="5.0" fill="#fcd34d" />
+              {/* Smiling details */}
+              <circle cx="52.0" cy="17" r="0.6" fill="#000" />
+              <circle cx="55.0" cy="17" r="0.6" fill="#000" />
+              <path d="M51.5 19.5 Q53.5 21.2 55.5 19.5" stroke="#000" strokeWidth="0.75" fill="none" strokeLinecap="round" />
+
+              {/* Arms holding handlebars */}
+              <path d="M50 30 L40 33 L35 28" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              
+              {/* Leg / Pedals */}
+              <path d="M49 40 L44 51 L45 65" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+            </g>
           </svg>
         </div>
       </div>
@@ -299,20 +371,20 @@ const TechStack = () => {
             onClick={() => setIsPaused(!isPaused)}
             className="px-5 py-2.5 rounded-lg bg-[#6C63FF] hover:bg-[#6C63FF]/90 text-white font-heading font-semibold text-xs tracking-wider transition-all shadow-[0_0_15px_rgba(108,99,255,0.2)]"
           >
-            {isPaused ? 'RESUME DRIVE' : 'PAUSE DRIVE'}
+            {isPaused ? 'RESUME COMMUTE' : 'PAUSE COMMUTE'}
           </button>
           
           <button
             onClick={() => setIsNight(!isNight)}
             className="px-5 py-2.5 rounded-lg bg-[#00D4FF]/20 border border-[#00D4FF]/40 text-[#00D4FF] hover:bg-[#00D4FF]/30 font-heading font-semibold text-xs tracking-wider transition-all"
           >
-            {isNight ? 'DAY MODE ☀️' : 'NIGHT DRIVE 🌙'}
+            {isNight ? 'DAYLIGHT ☀️' : 'NIGHT RIDE 🌙'}
           </button>
         </div>
 
         {/* Speed Controller Slider */}
         <div className="flex flex-col w-full md:w-fit items-start gap-1">
-          <span className="font-mono text-[10px] text-[#6B6B80] uppercase tracking-wider">Speed: {speed}x</span>
+          <span className="font-mono text-[10px] text-[#6B6B80] uppercase tracking-wider">Cadence: {speed}x</span>
           <input
             type="range"
             min="0.5"
