@@ -16,7 +16,7 @@ export const Loading = ({ onComplete }: LoadingProps) => {
     // 1. Simulate loading progress
     let start = 0;
     const interval = setInterval(() => {
-      const step = Math.floor(Math.random() * 5) + 2;
+      const step = Math.floor(Math.random() * 4) + 2;
       start += step;
       if (start >= 100) {
         start = 100;
@@ -54,16 +54,16 @@ export const Loading = ({ onComplete }: LoadingProps) => {
           }
           
           // Expand the black pill radially to cover the screen
-          const size = Math.max(window.innerWidth, window.innerHeight) * 2.8;
+          const size = Math.max(window.innerWidth, window.innerHeight) * 3.0;
           tl.to(pill, {
             width: size,
             height: size,
             borderRadius: '50%',
             duration: 0.95,
-            ease: 'power3.in',
+            ease: 'power4.in',
           }, '-=0.1');
         }
-      }, 1000);
+      }, 1200);
     }, 400);
   };
 
@@ -73,21 +73,21 @@ export const Loading = ({ onComplete }: LoadingProps) => {
       className="fixed inset-0 z-[99999] bg-[#eae5ec] flex flex-col justify-center items-center select-none overflow-hidden"
     >
       {/* Top Header Mockup */}
-      <div className="absolute top-0 left-0 w-full px-6 py-6 md:px-12 flex justify-between items-center pointer-events-none">
-        <span className="font-heading font-extrabold text-sm md:text-base tracking-widest text-[#0a0a0f]">
+      <div className="absolute top-0 left-0 w-full px-8 py-8 md:px-16 flex justify-between items-center pointer-events-none">
+        <span className="font-heading font-black text-lg md:text-xl tracking-widest text-[#0a0a0f]">
           SP
         </span>
         {/* Mock visualizer bars */}
-        <div className="flex gap-1 items-end h-5">
-          <span className="w-[1.5px] h-3 bg-[#0a0a0f] animate-pulse"></span>
-          <span className="w-[1.5px] h-5 bg-[#0a0a0f] animate-pulse delay-75"></span>
-          <span className="w-[1.5px] h-4 bg-[#0a0a0f] animate-pulse delay-150"></span>
+        <div className="flex gap-1.5 items-end h-6">
+          <span className="w-[2px] h-3 bg-[#0a0a0f] animate-pulse"></span>
+          <span className="w-[2px] h-6 bg-[#0a0a0f] animate-pulse delay-75"></span>
+          <span className="w-[2px] h-4 bg-[#0a0a0f] animate-pulse delay-150"></span>
         </div>
       </div>
 
-      {/* Massive Scrolling Marquee Background */}
+      {/* Massive Scrolling Marquee Background (Larger size) */}
       <div className="absolute top-1/2 left-0 w-full overflow-hidden -translate-y-1/2 pointer-events-none select-none">
-        <div className="flex whitespace-nowrap animate-marquee font-heading font-black text-6xl md:text-9xl tracking-wider text-[#0a0a0f]/5 uppercase">
+        <div className="flex whitespace-nowrap animate-marquee font-heading font-black text-8xl md:text-[10rem] tracking-widest text-[#0a0a0f]/5 uppercase leading-none">
           <span>
             CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; &nbsp;
           </span>
@@ -97,35 +97,40 @@ export const Loading = ({ onComplete }: LoadingProps) => {
         </div>
       </div>
 
-      {/* Center Black Loading Pill (Expands to engulf screen) */}
+      {/* Center Black Loading Pill (Larger scale with dynamic aura) */}
       <div
         ref={pillRef}
-        className="relative z-10 rounded-full bg-[#0a0a0f] border border-[#1E1E2E]/80 shadow-[0_20px_50px_rgba(0,0,0,0.25)] flex items-center justify-center overflow-hidden"
+        className="relative z-10 rounded-full bg-[#0a0a0f] border border-[#1E1E2E] shadow-[0_25px_60px_rgba(0,0,0,0.35)] flex items-center justify-center overflow-hidden"
         style={{
-          width: '260px',
-          height: '68px'
+          width: '320px',
+          height: '76px'
         }}
       >
-        {/* Glow behind pill */}
-        <div className="absolute inset-0 rounded-full bg-[#6C63FF]/5 filter blur-md pointer-events-none"></div>
+        {/* Dynamic Growing Glow Aura behind pill contents */}
+        <div
+          className="absolute inset-0 opacity-25 filter blur-md pointer-events-none transition-all duration-300"
+          style={{
+            transform: `scale(${1 + (percent / 100) * 0.5})`,
+            background: `radial-gradient(circle, ${percent < 50 ? '#6C63FF' : '#00D4FF'} 0%, transparent 80%)`
+          }}
+        ></div>
 
         {/* Text container */}
         <div
           ref={textRef}
-          className="relative z-10 font-heading font-semibold text-sm md:text-base text-white uppercase tracking-wider flex items-center gap-2 select-none"
+          className="relative z-10 font-heading font-bold text-base md:text-lg text-white uppercase tracking-wider flex items-center gap-2 select-none"
         >
           {!isWelcome ? (
             <div className="flex items-center justify-center gap-1.5">
               <span>LOADING</span>
-              <span className="text-[#00D4FF] font-mono font-medium ml-2">{percent}%</span>
+              <span className="text-[#00D4FF] font-mono font-semibold ml-2">{percent}%</span>
               {/* Blinking terminal cursor block */}
               <span className="inline-block w-2.5 h-4 bg-white animate-pulse ml-0.5"></span>
             </div>
           ) : (
             <div className="flex items-center justify-center gap-1.5 animate-fade-in">
-              {/* Blinking block cursor left of welcome */}
               <span className="inline-block w-2.5 h-4 bg-white animate-pulse mr-0.5"></span>
-              <span className="text-[#6C63FF] font-bold tracking-widest">WELCOME</span>
+              <span className="text-[#6C63FF] font-black tracking-[0.2em]">WELCOME</span>
             </div>
           )}
         </div>
