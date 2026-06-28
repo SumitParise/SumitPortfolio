@@ -90,11 +90,40 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       let screenLight: any | null = null;
       let mixer: THREE.AnimationMixer;
 
-      const clock = new THREE.Clock();
+      // Custom high-precision timer to replace deprecated THREE.Clock
+      let lastTime = performance.now();
       const light = setLighting(scene);
       const { loadCharacter } = setCharacter(renderer, scene, camera);
 
       let onResize: (() => void) | null = null;
+      let animationFrameId: number;
+
+      const animate = () => {
+        animationFrameId = requestAnimationFrame(animate);
+        if (headBone) {
+          handleHeadRotation(
+            headBone,
+            mouse.x,
+            mouse.y,
+            interpolation.x,
+            interpolation.y,
+            THREE.MathUtils.lerp
+          );
+          light.setPointLight(screenLight);
+        }
+        
+        // Calculate delta time using high-precision performance.now()
+        const currentTime = performance.now();
+        const delta = (currentTime - lastTime) / 1000;
+        lastTime = currentTime;
+
+        if (mixer) {
+          mixer.update(delta);
+        }
+        if (renderer) {
+          renderer.render(scene, camera);
+        }
+      };
 
       loadCharacter()
         .then((gltf) => {
@@ -131,28 +160,64 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
               });
             }
 
-            scene.add(clonedScene);
-            headBone = clonedScene.getObjectByName("spine006") || null;
-            screenLight = clonedScene.getObjectByName("screenlight") || null;
-            setLoadingModel(false);
-            setLoading(100);
+            // GPU Pre-compilation: Compile the shaders asynchronously BEFORE starting the animation loop
+            if (renderer && renderer.compileAsync) {
+              renderer.compileAsync(clonedScene, camera, scene).then(() => {
+                scene.add(clonedScene);
+                headBone = clonedScene.getObjectByName("spine006") || null;
+                screenLight = clonedScene.getObjectByName("screenlight") || null;
+                setLoadingModel(false);
+                setLoading(100);
 
-            light.turnOnLights();
-            if (view === "about") {
-              const blink = gltf.animations.find((clip) => clip.name === "Blink");
-              if (blink) {
-                mixer.clipAction(blink).play();
-              }
+                light.turnOnLights();
+                if (view === "about") {
+                  const blink = gltf.animations.find((clip) => clip.name === "Blink");
+                  if (blink) {
+                    mixer.clipAction(blink).play();
+                  }
+                } else {
+                  animations.startIntro();
+                }
+
+                onResize = () => {
+                  if (renderer) {
+                    handleResize(renderer, camera, canvasDiv, clonedScene);
+                  }
+                };
+                window.addEventListener("resize", onResize);
+
+                // Start loop only after compilation completes
+                lastTime = performance.now();
+                animate();
+              });
             } else {
-              animations.startIntro();
-            }
+              // Fallback if compileAsync is not supported
+              scene.add(clonedScene);
+              headBone = clonedScene.getObjectByName("spine006") || null;
+              screenLight = clonedScene.getObjectByName("screenlight") || null;
+              setLoadingModel(false);
+              setLoading(100);
 
-            onResize = () => {
-              if (renderer) {
-                handleResize(renderer, camera, canvasDiv, clonedScene);
+              light.turnOnLights();
+              if (view === "about") {
+                const blink = gltf.animations.find((clip) => clip.name === "Blink");
+                if (blink) {
+                  mixer.clipAction(blink).play();
+                }
+              } else {
+                animations.startIntro();
               }
-            };
-            window.addEventListener("resize", onResize);
+
+              onResize = () => {
+                if (renderer) {
+                  handleResize(renderer, camera, canvasDiv, clonedScene);
+                }
+              };
+              window.addEventListener("resize", onResize);
+
+              lastTime = performance.now();
+              animate();
+            }
           }
         })
         .catch((err) => {
@@ -193,32 +258,10 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
         landingDiv.addEventListener("touchend", onTouchEnd);
       }
 
-      let animationFrameId: number;
-      const animate = () => {
-        animationFrameId = requestAnimationFrame(animate);
-        if (headBone) {
-          handleHeadRotation(
-            headBone,
-            mouse.x,
-            mouse.y,
-            interpolation.x,
-            interpolation.y,
-            THREE.MathUtils.lerp
-          );
-          light.setPointLight(screenLight);
-        }
-        const delta = clock.getDelta();
-        if (mixer) {
-          mixer.update(delta);
-        }
-        if (renderer) {
-          renderer.render(scene, camera);
-        }
-      };
-      animate();
-
       return () => {
-        cancelAnimationFrame(animationFrameId);
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+        }
         clearTimeout(debounce);
         scene.clear();
         if (renderer) {
