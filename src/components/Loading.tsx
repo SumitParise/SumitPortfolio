@@ -15,14 +15,14 @@ const Loading = ({ onComplete }: LoadingProps) => {
   useEffect(() => {
     let percentVal = 0;
     const interval = setInterval(() => {
-      if (percentVal <= 50) {
+      if (percentVal < 50) {
         const rand = Math.round(Math.random() * 5) + 2;
         percentVal = Math.min(50, percentVal + rand);
         setPercent(percentVal);
       } else {
         clearInterval(interval);
         const slowInterval = setInterval(() => {
-          percentVal = percentVal + Math.round(Math.random() * 2);
+          percentVal = percentVal + Math.round(Math.random() * 2) + 1;
           if (percentVal >= 100) {
             percentVal = 100;
             setPercent(100);
