@@ -1,4 +1,5 @@
 import useScrollReveal from '../../hooks/useScrollReveal';
+import CharacterModel from '../Character';
 
 const Skills = () => {
   const containerRef = useScrollReveal<HTMLDivElement>();
@@ -17,12 +18,17 @@ const Skills = () => {
           <span className="text-[#6C63FF]/10">I DO</span>
         </div>
         
-        {/* Static 3D developer character image (same for mobile & desktop, 100% bug-free!) */}
-        <div className="relative z-10 w-full max-w-[450px] h-auto pointer-events-none select-none">
+        {/* 3D Character (Desktop) */}
+        <div className="hidden lg:block absolute inset-0 z-10 w-full h-full">
+          <CharacterModel />
+        </div>
+
+        {/* Overlapping 3D developer character (mobile only backup) */}
+        <div className="lg:hidden relative z-10 w-[280px] md:w-[390px] h-auto pointer-events-none translate-x-[50px] md:translate-x-[70px] translate-y-[10px]">
           <img
             src="/developer_3d.png"
             alt="3D Developer at desk"
-            className="w-full h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)]"
+            className="w-full h-auto object-contain drop-shadow-[0_10px_35px_rgba(0,0,0,0.6)]"
           />
         </div>
       </div>
