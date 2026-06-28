@@ -25,7 +25,7 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
   const [hasWebGL, setHasWebGL] = useState(true);
   
   // State for the processed chroma-keyed transparent image URL
-  const [processedImageSrc, setProcessedImageSrc] = useState<string>("/developer_3d.png");
+  const [processedImageSrc, setProcessedImageSrc] = useState<string>("");
 
   // 1. Automatically remove the solid black background from the fallback image on load
   useEffect(() => {
@@ -343,9 +343,11 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       {(!hasWebGL || loadingModel) && (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none select-none">
           <img
-            src={processedImageSrc}
+            src={processedImageSrc || undefined}
             alt="3D Coder character placeholder"
-            className="w-[240px] md:w-[320px] h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-opacity duration-500 opacity-100"
+            className={`w-[240px] md:w-[320px] h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-opacity duration-300 ${
+              processedImageSrc ? "opacity-100" : "opacity-0"
+            }`}
           />
         </div>
       )}
