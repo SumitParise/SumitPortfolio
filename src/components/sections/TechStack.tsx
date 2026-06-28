@@ -98,7 +98,7 @@ const TechStack = () => {
         }
         @keyframes spinner-wheel {
           from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
+          to { transform: rotate(-360deg); }
         }
 
         .animate-scroll-clouds {
@@ -364,9 +364,9 @@ const TechStack = () => {
           </div>
         </div>
 
-        {/* Dynamic Vector SVG Cyclist (Fixed: Positioned to bottom-[52px] to align wheels perfectly with 60px road) */}
+        {/* Dynamic Vector SVG Cyclist (Fixed: Added scale-x-[-1] to flip rider to face the right direction of travel) */}
         <div
-          className={`absolute left-[18%] bottom-[52px] w-24 md:w-28 z-40 transition-all duration-300 select-none`}
+          className={`absolute left-[18%] bottom-[52px] w-24 md:w-28 z-40 transition-all duration-300 select-none scale-x-[-1]`}
         >
           {/* Animated Ground Shadow */}
           <div
@@ -410,7 +410,7 @@ const TechStack = () => {
               <line x1="67.2" y1="72.8" x2="82.8" y2="57.2" stroke="#6B6B80" strokeWidth="0.8" />
             </g>
 
-            {/* Bicycle Frame (Fixed: Redesigned with Fork connecting Front Wheel to Handlebars, Top tube, Down tube, Seat tube, Chainstay and Seatstay) */}
+            {/* Bicycle Frame */}
             <path
               d="M25 65 L35 35 L32 28 M35 35 L56 45 M35 35 L48 65 M56 45 L48 65 M48 65 L75 65 M56 45 L75 65"
               stroke={isNight ? "#00D4FF" : "#6C63FF"}
@@ -433,7 +433,7 @@ const TechStack = () => {
             {/* Pedal Crank Center */}
             <circle cx="48" cy="65" r="2.5" fill="#888" />
 
-            {/* Pedaling Smiling Rider (Fixed: Adjusted position to sit on seat and lean forward to handle bars) */}
+            {/* Pedaling Smiling Rider */}
             <g
               className={`${!isPaused && 'animate-rider-bob'}`}
               style={{
