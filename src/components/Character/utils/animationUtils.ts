@@ -9,21 +9,17 @@ const setAnimations = (gltf: GLTF) => {
     const introClip = gltf.animations.find(
       (clip) => clip.name === "introAnimation"
     );
-    if (introClip) {
-      const introAction = mixer.clipAction(introClip);
-      introAction.setLoop(THREE.LoopOnce, 1);
-      introAction.clampWhenFinished = true;
-      introAction.play();
-    }
+    const introAction = mixer.clipAction(introClip!);
+    introAction.setLoop(THREE.LoopOnce, 1);
+    introAction.clampWhenFinished = true;
+    introAction.play();
     const clipNames = ["key1", "key2", "key5", "key6"];
     clipNames.forEach((name) => {
       const clip = THREE.AnimationClip.findByName(gltf.animations, name);
       if (clip) {
         const action = mixer?.clipAction(clip);
-        if (action) {
-          action.play();
-          action.timeScale = 1.2;
-        }
+        action!.play();
+        action!.timeScale = 1.2;
       } else {
         console.error(`Animation "${name}" not found`);
       }
@@ -40,19 +36,12 @@ const setAnimations = (gltf: GLTF) => {
     const introClip = gltf.animations.find(
       (clip) => clip.name === "introAnimation"
     );
-    if (introClip) {
-      const introAction = mixer.clipAction(introClip);
-      introAction.clampWhenFinished = true;
-      introAction.reset().play();
-    }
+    const introAction = mixer.clipAction(introClip!);
+    introAction.clampWhenFinished = true;
+    introAction.reset().play();
     setTimeout(() => {
       const blink = gltf.animations.find((clip) => clip.name === "Blink");
-      if (blink) {
-        const blinkAction = mixer.clipAction(blink);
-        if (blinkAction) {
-          blinkAction.play().fadeIn(0.5);
-        }
-      }
+      mixer.clipAction(blink!).play().fadeIn(0.5);
     }, 2500);
   }
   function hover(gltf: GLTF, hoverDiv: HTMLDivElement) {
