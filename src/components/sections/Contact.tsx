@@ -11,6 +11,42 @@ const Contact = () => {
   const [isSending, setIsSending] = useState(false);
   const [showToast, setShowToast] = useState(false);
 
+  // Play a premium futuristic digital chime sound synthesized on the fly via Web Audio API
+  const playSuccessSound = () => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+
+      // High-fidelity digital chime oscillators
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 chime
+      osc1.frequency.exponentialRampToValueAtTime(880.00, ctx.currentTime + 0.12); // slides up to A5
+
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(293.66, ctx.currentTime); // D4 chime body
+      osc2.frequency.exponentialRampToValueAtTime(440.00, ctx.currentTime + 0.16); // slides up to A4
+
+      gainNode.gain.setValueAtTime(0.12, ctx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6); // smooth envelope fade out
+
+      osc1.connect(gainNode);
+      osc2.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      osc1.start();
+      osc2.start();
+      osc1.stop(ctx.currentTime + 0.6);
+      osc2.stop(ctx.currentTime + 0.6);
+    } catch (e) {
+      console.warn("Web Audio API not allowed or supported on this device:", e);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSending(true);
@@ -34,6 +70,7 @@ const Contact = () => {
         setEmail('');
         setMessage('');
         setShowToast(true);
+        playSuccessSound(); // Play synthesized notification sound
         
         // Auto-close toast notification after 5 seconds
         setTimeout(() => {
@@ -68,30 +105,37 @@ const Contact = () => {
         }
       `}} />
 
-      {/* Premium Toast Popup Notification */}
+      {/* Premium Futuristic Toast Popup Notification */}
       {showToast && (
         <div 
-          className="fixed top-6 right-6 z-[100000] bg-[#111118]/95 backdrop-blur-md border border-[#00D4FF]/30 p-4 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex items-start gap-3.5 w-[330px] overflow-hidden select-none pointer-events-auto"
+          className="fixed top-6 right-6 z-[100000] bg-[#0c0c14]/92 backdrop-blur-xl border border-[#00D4FF]/30 p-5 rounded-2xl shadow-[0_15px_45px_rgba(0,0,0,0.65)] flex items-start gap-4 w-[340px] overflow-hidden select-none pointer-events-auto"
           style={{
-            animation: 'slide-in-toast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards'
+            animation: 'slide-in-toast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            boxShadow: '0 15px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(0, 212, 255, 0.12)'
           }}
         >
-          <div className="w-10 h-10 rounded-full bg-[#00D4FF]/10 text-[#00D4FF] flex items-center justify-center shrink-0 shadow-[0_0_10px_rgba(0,212,255,0.15)]">
+          {/* Monotech left neon bar */}
+          <div className="absolute left-0 top-0 bottom-0 w-[4px] bg-[#00D4FF] shadow-[2px_0_8px_#00D4FF]"></div>
+
+          <div className="w-10 h-10 rounded-full bg-[#00D4FF]/10 text-[#00D4FF] flex items-center justify-center shrink-0 border border-[#00D4FF]/20 shadow-[0_0_10px_rgba(0,212,255,0.15)] animate-pulse">
             <svg className="w-5 h-5 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="2.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
             </svg>
           </div>
           
           <div className="flex-1">
-            <h5 className="font-heading font-bold text-white text-sm">Message Sent!</h5>
-            <p className="text-xs text-[#6B6B80] mt-1 font-sans leading-relaxed">
-              Your message was sent to **parisesumit86@gmail.com**. Sumit will get back to you shortly.
+            <div className="text-[9px] font-mono text-[#00D4FF] uppercase tracking-[0.2em] mb-0.5 font-semibold select-none">
+              System Notification
+            </div>
+            <h5 className="font-heading font-black text-white text-sm">Message Sent!</h5>
+            <p className="text-xs text-[#9b9bb2] mt-1.5 font-sans leading-relaxed">
+              Your message was sent to <strong className="text-white font-bold">parisesumit86@gmail.com</strong>. Sumit will get back to you shortly.
             </p>
           </div>
 
           <button 
             onClick={() => setShowToast(false)}
-            className="text-neutral-500 hover:text-white transition-colors duration-200"
+            className="text-neutral-500 hover:text-white transition-colors duration-200 mt-0.5"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -100,7 +144,7 @@ const Contact = () => {
 
           {/* 5-second animated progress bar countdown */}
           <div 
-            className="absolute bottom-0 left-0 h-[3px] bg-[#00D4FF] shadow-[0_-2px_6px_#00D4FF]"
+            className="absolute bottom-0 left-0 h-[3px] bg-gradient-to-r from-[#6C63FF] to-[#00D4FF] shadow-[0_-2px_6px_#00D4FF]"
             style={{
               animation: 'progress-shrink 5s linear forwards'
             }}
