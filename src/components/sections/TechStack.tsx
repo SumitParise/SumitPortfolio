@@ -150,7 +150,7 @@ const TechStack = () => {
         </p>
       </div>
 
-      {/* 2D Landscape Viewport (Fixed: Changed transition-all to transition-colors to resolve GSAP conflict) */}
+      {/* 2D Landscape Viewport */}
       <div
         className={`reveal-item w-full h-[45vh] md:h-[55vh] border border-[#1E1E2E]/60 rounded-2xl relative overflow-hidden flex flex-col justify-end shadow-2xl transition-colors duration-700 ${
           isNight
@@ -364,9 +364,9 @@ const TechStack = () => {
           </div>
         </div>
 
-        {/* Dynamic Vector SVG Cyclist (Smiling pedaling rider with shadow & light) */}
+        {/* Dynamic Vector SVG Cyclist (Fixed: Positioned to bottom-[52px] to align wheels perfectly with 60px road) */}
         <div
-          className={`absolute left-[18%] bottom-[22px] w-24 md:w-28 z-40 transition-all duration-300 select-none`}
+          className={`absolute left-[18%] bottom-[52px] w-24 md:w-28 z-40 transition-all duration-300 select-none`}
         >
           {/* Animated Ground Shadow */}
           <div
@@ -410,17 +410,17 @@ const TechStack = () => {
               <line x1="67.2" y1="72.8" x2="82.8" y2="57.2" stroke="#6B6B80" strokeWidth="0.8" />
             </g>
 
-            {/* Bicycle Frame */}
+            {/* Bicycle Frame (Fixed: Redesigned with Fork connecting Front Wheel to Handlebars, Top tube, Down tube, Seat tube, Chainstay and Seatstay) */}
             <path
-              d="M25 65 L45 65 L60 45 L75 65 M45 65 L50 40 L60 45 M50 40 L38 28"
+              d="M25 65 L35 35 L32 28 M35 35 L56 45 M35 35 L48 65 M56 45 L48 65 M48 65 L75 65 M56 45 L75 65"
               stroke={isNight ? "#00D4FF" : "#6C63FF"}
               strokeWidth="2.2"
               fill="none"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* Handlebars & Seat */}
-            <path d="M38 28 L32 28 M50 40 L45 40" stroke={isNight ? "#00D4FF" : "#6C63FF"} strokeWidth="2.0" fill="none" strokeLinecap="round" />
+            {/* Handlebars & Seat post */}
+            <path d="M32 28 L27 28 M56 45 L50 43" stroke={isNight ? "#00D4FF" : "#6C63FF"} strokeWidth="2.0" fill="none" strokeLinecap="round" />
 
             {/* Bicycle Basket & Front Light */}
             <path d="M32 28 L27 28 L27 34 L32 34 Z" fill={isNight ? "#00D4FF" : "#6C63FF"} />
@@ -431,30 +431,30 @@ const TechStack = () => {
             )}
 
             {/* Pedal Crank Center */}
-            <circle cx="45" cy="65" r="2.5" fill="#888" />
+            <circle cx="48" cy="65" r="2.5" fill="#888" />
 
-            {/* Pedaling Smiling Rider (Bobs up/down to simulate pedal cadence) */}
+            {/* Pedaling Smiling Rider (Fixed: Adjusted position to sit on seat and lean forward to handle bars) */}
             <g
               className={`${!isPaused && 'animate-rider-bob'}`}
               style={{
                 animationDuration: `${0.42 * (1 / speed)}s`
               }}
             >
-              {/* Torso/Body */}
-              <line x1="49" y1="40" x2="52" y2="25" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="5.0" strokeLinecap="round" />
+              {/* Torso/Body (Sitting on seat at 56,43 and leaning to 48,25) */}
+              <line x1="56" y1="43" x2="48" y2="25" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="5.0" strokeLinecap="round" />
               
               {/* Face/Head (Smiling!) */}
-              <circle cx="53.5" cy="18" r="5.0" fill="#fcd34d" />
+              <circle cx="48" cy="17" r="5.0" fill="#fcd34d" />
               {/* Smiling details */}
-              <circle cx="52.0" cy="17" r="0.6" fill="#000" />
-              <circle cx="55.0" cy="17" r="0.6" fill="#000" />
-              <path d="M51.5 19.5 Q53.5 21.2 55.5 19.5" stroke="#000" strokeWidth="0.75" fill="none" strokeLinecap="round" />
+              <circle cx="46.5" cy="16" r="0.6" fill="#000" />
+              <circle cx="49.5" cy="16" r="0.6" fill="#000" />
+              <path d="M46 18.5 Q48 20.2 50 18.5" stroke="#000" strokeWidth="0.75" fill="none" strokeLinecap="round" />
 
               {/* Arms holding handlebars */}
-              <path d="M50 30 L40 33 L35 28" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="1.8" fill="none" strokeLinecap="round" />
+              <path d="M48 25 L38 27 L32 28" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="1.8" fill="none" strokeLinecap="round" />
               
-              {/* Leg / Pedals */}
-              <path d="M49 40 L44 51 L45 65" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" strokeLinecap="round" />
+              {/* Leg / Pedals (Jointed from hip to knee to foot pedal) */}
+              <path d="M56 43 L46 48 L45 58" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" strokeLinecap="round" />
             </g>
 
             {/* Gradients */}
