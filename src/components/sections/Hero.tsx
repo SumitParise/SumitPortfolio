@@ -9,11 +9,16 @@ interface SphereProps {
   mouseRef: React.MutableRefObject<{ x: number; y: number }>;
 }
 
-// Double rotating 3D centerpiece with interactive mouse tracking and lighting
+// Double rotating 3D centerpiece with smooth mouse tilt and constant spin
 function DualRotatingSphere({ mouseRef }: SphereProps) {
+  const outerGroupRef = useRef<THREE.Group>(null);
+  const innerGroupRef = useRef<THREE.Group>(null);
+  const ringGroupRef = useRef<THREE.Group>(null);
+
   const outerSphereRef = useRef<THREE.Mesh>(null);
   const innerSphereRef = useRef<THREE.Mesh>(null);
   const ringRef = useRef<THREE.Mesh>(null);
+  
   const pointsRef = useRef<THREE.Points>(null);
   const lightRef = useRef<THREE.PointLight>(null);
 
@@ -23,34 +28,47 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
     // 1. Smoothly position the point light relative to pointer coords
     if (lightRef.current) {
-      lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, x * 4.5, 0.08);
-      lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, y * 4.5, 0.08);
+      lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, x * 5.0, 0.08);
+      lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, y * 5.0, 0.08);
     }
 
-    // 2. Rotate & sway outer sphere based on mouse tracking
+    // 2. Constant mesh spin (perfectly smooth, unaffected by mouse lag)
     if (outerSphereRef.current) {
-      outerSphereRef.current.rotation.x = THREE.MathUtils.lerp(outerSphereRef.current.rotation.x, time * 0.04 + y * 0.4, 0.05);
-      outerSphereRef.current.rotation.y = THREE.MathUtils.lerp(outerSphereRef.current.rotation.y, time * 0.06 + x * 0.4, 0.05);
+      outerSphereRef.current.rotation.y = time * 0.08;
+      outerSphereRef.current.rotation.x = time * 0.04;
+      // Gentle breathing animation
       const scale = 1.8 + Math.sin(time * 0.5) * 0.08;
       outerSphereRef.current.scale.set(scale, scale, scale);
     }
 
-    // 3. Rotate & sway inner sphere (counter rotation)
     if (innerSphereRef.current) {
-      innerSphereRef.current.rotation.x = THREE.MathUtils.lerp(innerSphereRef.current.rotation.x, -time * 0.08 - y * 0.25, 0.05);
-      innerSphereRef.current.rotation.y = THREE.MathUtils.lerp(innerSphereRef.current.rotation.y, -time * 0.12 - x * 0.25, 0.05);
+      innerSphereRef.current.rotation.y = -time * 0.15;
+      innerSphereRef.current.rotation.x = -time * 0.08;
       const scale = 1.0 + Math.sin(time * 0.5) * 0.04;
       innerSphereRef.current.scale.set(scale, scale, scale);
     }
 
-    // 4. Sway orbiting torus ring
     if (ringRef.current) {
-      ringRef.current.rotation.x = THREE.MathUtils.lerp(ringRef.current.rotation.x, Math.PI / 4 + y * 0.2, 0.05);
-      ringRef.current.rotation.y = THREE.MathUtils.lerp(ringRef.current.rotation.y, time * 0.09 + x * 0.2, 0.05);
-      ringRef.current.rotation.z = time * 0.03;
+      ringRef.current.rotation.z = time * 0.08;
     }
 
-    // 5. Sway surrounding particle starfield
+    // 3. Smoothly tilt the parent groups based on mouse position
+    if (outerGroupRef.current) {
+      outerGroupRef.current.rotation.x = THREE.MathUtils.lerp(outerGroupRef.current.rotation.x, y * 0.5, 0.08);
+      outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, x * 0.5, 0.08);
+    }
+
+    if (innerGroupRef.current) {
+      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, -y * 0.35, 0.08);
+      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, -x * 0.35, 0.08);
+    }
+
+    if (ringGroupRef.current) {
+      ringGroupRef.current.rotation.x = THREE.MathUtils.lerp(ringGroupRef.current.rotation.x, Math.PI / 4.5 + y * 0.3, 0.08);
+      ringGroupRef.current.rotation.y = THREE.MathUtils.lerp(ringGroupRef.current.rotation.y, x * 0.3, 0.08);
+    }
+
+    // 4. Sway surrounding particle starfield
     if (pointsRef.current) {
       pointsRef.current.rotation.y = -time * 0.015 - x * 0.08;
       pointsRef.current.rotation.x = time * 0.003 - y * 0.08;
@@ -78,46 +96,56 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
   return (
     <group>
-      {/* Light source tracking the pointer cursor */}
-      <pointLight ref={lightRef} intensity={25} distance={12} color="#00D4FF" />
+      {/* Dynamic light source tracking the pointer cursor */}
+      <pointLight ref={lightRef} intensity={35} distance={15} color="#00D4FF" />
 
-      {/* Outer Dense Wireframe Sphere */}
-      <mesh ref={outerSphereRef}>
-        <icosahedronGeometry args={[1.3, 2]} />
-        <meshStandardMaterial
-          color="#6C63FF"
-          wireframe
-          transparent
-          opacity={0.4}
-          roughness={0.2}
-          metalness={0.8}
-        />
-      </mesh>
+      {/* Outer Dense Wireframe Sphere (subdivision 3 for smooth geometry) */}
+      <group ref={outerGroupRef}>
+        <mesh ref={outerSphereRef}>
+          <icosahedronGeometry args={[1.3, 3]} />
+          <meshStandardMaterial
+            color="#6C63FF"
+            emissive="#6C63FF"
+            emissiveIntensity={0.6}
+            wireframe
+            transparent
+            opacity={0.45}
+            roughness={0.2}
+            metalness={0.8}
+          />
+        </mesh>
+      </group>
 
-      {/* Inner Wireframe Sphere */}
-      <mesh ref={innerSphereRef}>
-        <icosahedronGeometry args={[0.8, 1]} />
-        <meshStandardMaterial
-          color="#00D4FF"
-          wireframe
-          transparent
-          opacity={0.35}
-          roughness={0.15}
-          metalness={0.9}
-        />
-      </mesh>
+      {/* Inner Wireframe Sphere (subdivision 2 for smooth geometry) */}
+      <group ref={innerGroupRef}>
+        <mesh ref={innerSphereRef}>
+          <icosahedronGeometry args={[0.8, 2]} />
+          <meshStandardMaterial
+            color="#00D4FF"
+            emissive="#00D4FF"
+            emissiveIntensity={0.7}
+            wireframe
+            transparent
+            opacity={0.4}
+            roughness={0.15}
+            metalness={0.9}
+          />
+        </mesh>
+      </group>
 
       {/* Orbiting flat Torus Ring */}
-      <mesh ref={ringRef}>
-        <torusGeometry args={[1.9, 0.012, 8, 64]} />
-        <meshStandardMaterial
-          color="#00D4FF"
-          roughness={0.15}
-          metalness={0.85}
-          emissive="#00D4FF"
-          emissiveIntensity={0.25}
-        />
-      </mesh>
+      <group ref={ringGroupRef}>
+        <mesh ref={ringRef}>
+          <torusGeometry args={[1.9, 0.012, 8, 64]} />
+          <meshStandardMaterial
+            color="#00D4FF"
+            roughness={0.1}
+            metalness={0.9}
+            emissive="#00D4FF"
+            emissiveIntensity={0.8}
+          />
+        </mesh>
+      </group>
 
       {/* Surrounding starfield particles */}
       <points ref={pointsRef}>
@@ -236,8 +264,8 @@ const Hero = () => {
             <Canvas camera={{ position: [0, 0, 5.5], fov: 60 }}>
               <ambientLight intensity={0.4} />
               {/* Static background contrast lights */}
-              <pointLight position={[-6, 6, 4]} intensity={5} color="#6C63FF" />
-              <pointLight position={[6, -6, 4]} intensity={5} color="#00D4FF" />
+              <pointLight position={[-6, 6, 4]} intensity={6} color="#6C63FF" />
+              <pointLight position={[6, -6, 4]} intensity={6} color="#00D4FF" />
               <DualRotatingSphere mouseRef={mouseRef} />
             </Canvas>
           )}
