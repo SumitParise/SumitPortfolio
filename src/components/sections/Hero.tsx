@@ -9,15 +9,18 @@ interface SphereProps {
   mouseRef: React.MutableRefObject<{ x: number; y: number }>;
 }
 
-// Double rotating 3D centerpiece with smooth mouse tilt and constant spin
+// Double rotating 3D centerpiece representing a glowing atomic molecule/nucleus system
 function DualRotatingSphere({ mouseRef }: SphereProps) {
-  const outerGroupRef = useRef<THREE.Group>(null);
-  const innerGroupRef = useRef<THREE.Group>(null);
-  const ringGroupRef = useRef<THREE.Group>(null);
+  const modelGroupRef = useRef<THREE.Group>(null);
+  const nucleusGroupRef = useRef<THREE.Group>(null);
+  
+  const orbit1GroupRef = useRef<THREE.Group>(null);
+  const orbit2GroupRef = useRef<THREE.Group>(null);
+  const orbit3GroupRef = useRef<THREE.Group>(null);
 
-  const outerSphereRef = useRef<THREE.Mesh>(null);
-  const innerSphereRef = useRef<THREE.Mesh>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
+  const e1Ref = useRef<THREE.Mesh>(null);
+  const e2Ref = useRef<THREE.Mesh>(null);
+  const e3Ref = useRef<THREE.Mesh>(null);
   
   const pointsRef = useRef<THREE.Points>(null);
   const lightRef = useRef<THREE.PointLight>(null);
@@ -26,49 +29,40 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
     const time = state.clock.getElapsedTime();
     const { x, y } = mouseRef.current;
 
-    // 1. Smoothly position the point light relative to pointer coords
+    // 1. Position the point light relative to pointer coords
     if (lightRef.current) {
       lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, x * 5.0, 0.08);
       lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, y * 5.0, 0.08);
     }
 
-    // 2. Constant mesh spin (perfectly smooth, unaffected by mouse lag)
-    if (outerSphereRef.current) {
-      outerSphereRef.current.rotation.y = time * 0.08;
-      outerSphereRef.current.rotation.x = time * 0.04;
-      // Gentle breathing animation
-      const scale = 1.8 + Math.sin(time * 0.5) * 0.08;
-      outerSphereRef.current.scale.set(scale, scale, scale);
+    // 2. Nucleus slow rotation
+    if (nucleusGroupRef.current) {
+      nucleusGroupRef.current.rotation.y = time * 0.15;
+      nucleusGroupRef.current.rotation.x = time * 0.08;
     }
 
-    if (innerSphereRef.current) {
-      innerSphereRef.current.rotation.y = -time * 0.15;
-      innerSphereRef.current.rotation.x = -time * 0.08;
-      const scale = 1.0 + Math.sin(time * 0.5) * 0.04;
-      innerSphereRef.current.scale.set(scale, scale, scale);
+    // 3. Move electrons along their orbits over time
+    const radius = 1.8;
+    if (e1Ref.current) {
+      e1Ref.current.position.x = radius * Math.cos(time * 1.6);
+      e1Ref.current.position.y = radius * Math.sin(time * 1.6);
+    }
+    if (e2Ref.current) {
+      e2Ref.current.position.x = radius * Math.cos(time * 2.3 + 1.0);
+      e2Ref.current.position.y = radius * Math.sin(time * 2.3 + 1.0);
+    }
+    if (e3Ref.current) {
+      e3Ref.current.position.x = radius * Math.cos(time * 1.9 + 2.0);
+      e3Ref.current.position.y = radius * Math.sin(time * 1.9 + 2.0);
     }
 
-    if (ringRef.current) {
-      ringRef.current.rotation.z = time * 0.08;
+    // 4. Smooth mouse tilt on the main model group
+    if (modelGroupRef.current) {
+      modelGroupRef.current.rotation.x = THREE.MathUtils.lerp(modelGroupRef.current.rotation.x, y * 0.5, 0.08);
+      modelGroupRef.current.rotation.y = THREE.MathUtils.lerp(modelGroupRef.current.rotation.y, x * 0.5, 0.08);
     }
 
-    // 3. Smoothly tilt the parent groups based on mouse position
-    if (outerGroupRef.current) {
-      outerGroupRef.current.rotation.x = THREE.MathUtils.lerp(outerGroupRef.current.rotation.x, y * 0.5, 0.08);
-      outerGroupRef.current.rotation.y = THREE.MathUtils.lerp(outerGroupRef.current.rotation.y, x * 0.5, 0.08);
-    }
-
-    if (innerGroupRef.current) {
-      innerGroupRef.current.rotation.x = THREE.MathUtils.lerp(innerGroupRef.current.rotation.x, -y * 0.35, 0.08);
-      innerGroupRef.current.rotation.y = THREE.MathUtils.lerp(innerGroupRef.current.rotation.y, -x * 0.35, 0.08);
-    }
-
-    if (ringGroupRef.current) {
-      ringGroupRef.current.rotation.x = THREE.MathUtils.lerp(ringGroupRef.current.rotation.x, Math.PI / 4.5 + y * 0.3, 0.08);
-      ringGroupRef.current.rotation.y = THREE.MathUtils.lerp(ringGroupRef.current.rotation.y, x * 0.3, 0.08);
-    }
-
-    // 4. Sway surrounding particle starfield
+    // 5. Sway surrounding particle shell
     if (pointsRef.current) {
       pointsRef.current.rotation.y = -time * 0.015 - x * 0.08;
       pointsRef.current.rotation.x = time * 0.003 - y * 0.08;
@@ -77,7 +71,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
     }
   });
 
-  // Randomized starfield shell coordinates
+  // Particles coordinates
   const particlesCount = 260;
   const positions = useMemo(() => {
     const pos = new Float32Array(particlesCount * 3);
@@ -86,7 +80,7 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       const v = Math.random();
       const theta = u * 2.0 * Math.PI;
       const phi = Math.acos(2.0 * v - 1.0);
-      const r = 2.4 + Math.random() * 2.6; // radius shell
+      const r = 2.4 + Math.random() * 2.6;
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
       pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
       pos[i * 3 + 2] = r * Math.cos(phi);
@@ -96,55 +90,103 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
   return (
     <group>
-      {/* Dynamic light source tracking the pointer cursor */}
+      {/* Light tracking the pointer */}
       <pointLight ref={lightRef} intensity={35} distance={15} color="#00D4FF" />
 
-      {/* Outer Dense Wireframe Sphere (subdivision 3 for smooth geometry) */}
-      <group ref={outerGroupRef}>
-        <mesh ref={outerSphereRef}>
-          <icosahedronGeometry args={[1.3, 3]} />
-          <meshStandardMaterial
-            color="#6C63FF"
-            emissive="#6C63FF"
-            emissiveIntensity={0.6}
-            wireframe
-            transparent
-            opacity={0.45}
-            roughness={0.2}
-            metalness={0.8}
-          />
-        </mesh>
-      </group>
+      {/* Main Model Group (Tilts with mouse) */}
+      <group ref={modelGroupRef}>
+        
+        {/* Central Nucleus Cluster */}
+        <group ref={nucleusGroupRef}>
+          {/* Binding Energy Cloud Core */}
+          <mesh>
+            <sphereGeometry args={[0.45, 32, 32]} />
+            <meshStandardMaterial
+              color="#00D4FF"
+              emissive="#00D4FF"
+              emissiveIntensity={0.65}
+              transparent
+              opacity={0.3}
+              roughness={0.1}
+              metalness={0.9}
+            />
+          </mesh>
+          
+          {/* Protons & Neutrons tightly bound */}
+          {/* Proton 1 (Cyan) */}
+          <mesh position={[0.12, 0.08, -0.05]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.8} metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Proton 2 (Cyan) */}
+          <mesh position={[-0.12, -0.08, 0.05]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.8} metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Proton 3 (Cyan) */}
+          <mesh position={[0.05, -0.12, -0.08]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.8} metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Neutron 1 (Purple) */}
+          <mesh position={[-0.08, 0.12, 0.08]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.7} metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Neutron 2 (Purple) */}
+          <mesh position={[0.08, -0.05, 0.12]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.7} metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Neutron 3 (Purple) */}
+          <mesh position={[-0.05, -0.1, -0.12]}>
+            <sphereGeometry args={[0.15, 16, 16]} />
+            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.7} metalness={0.8} roughness={0.2} />
+          </mesh>
+        </group>
 
-      {/* Inner Wireframe Sphere (subdivision 2 for smooth geometry) */}
-      <group ref={innerGroupRef}>
-        <mesh ref={innerSphereRef}>
-          <icosahedronGeometry args={[0.8, 2]} />
-          <meshStandardMaterial
-            color="#00D4FF"
-            emissive="#00D4FF"
-            emissiveIntensity={0.7}
-            wireframe
-            transparent
-            opacity={0.4}
-            roughness={0.15}
-            metalness={0.9}
-          />
-        </mesh>
-      </group>
+        {/* Orbit 1 (Tilted X) */}
+        <group ref={orbit1GroupRef} rotation={[Math.PI / 3, 0, 0]}>
+          {/* Orbit Line Ring */}
+          <mesh>
+            <torusGeometry args={[1.8, 0.008, 8, 64]} />
+            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={0.4} transparent opacity={0.35} />
+          </mesh>
+          {/* Electron 1 */}
+          <mesh ref={e1Ref}>
+            <sphereGeometry args={[0.09, 16, 16]} />
+            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={1.3} roughness={0.1} metalness={0.9} />
+          </mesh>
+        </group>
 
-      {/* Orbiting flat Torus Ring */}
-      <group ref={ringGroupRef}>
-        <mesh ref={ringRef}>
-          <torusGeometry args={[1.9, 0.012, 8, 64]} />
-          <meshStandardMaterial
-            color="#00D4FF"
-            roughness={0.1}
-            metalness={0.9}
-            emissive="#00D4FF"
-            emissiveIntensity={0.8}
-          />
-        </mesh>
+        {/* Orbit 2 (Tilted Y & Z) */}
+        <group ref={orbit2GroupRef} rotation={[0, Math.PI / 3, Math.PI / 4]}>
+          {/* Orbit Line Ring */}
+          <mesh>
+            <torusGeometry args={[1.8, 0.008, 8, 64]} />
+            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.4} transparent opacity={0.35} />
+          </mesh>
+          {/* Electron 2 */}
+          <mesh ref={e2Ref}>
+            <sphereGeometry args={[0.09, 16, 16]} />
+            <meshStandardMaterial color="#6C63FF" emissive="#6C63FF" emissiveIntensity={1.3} roughness={0.1} metalness={0.9} />
+          </mesh>
+        </group>
+
+        {/* Orbit 3 (Tilted Inverse) */}
+        <group ref={orbit3GroupRef} rotation={[Math.PI / 4, -Math.PI / 3, 0]}>
+          {/* Orbit Line Ring */}
+          <mesh>
+            <torusGeometry args={[1.8, 0.008, 8, 64]} />
+            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={0.4} transparent opacity={0.35} />
+          </mesh>
+          {/* Electron 3 */}
+          <mesh ref={e3Ref}>
+            <sphereGeometry args={[0.09, 16, 16]} />
+            <meshStandardMaterial color="#00D4FF" emissive="#00D4FF" emissiveIntensity={1.3} roughness={0.1} metalness={0.9} />
+          </mesh>
+        </group>
+
       </group>
 
       {/* Surrounding starfield particles */}
