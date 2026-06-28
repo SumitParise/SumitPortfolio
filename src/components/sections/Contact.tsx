@@ -1,13 +1,24 @@
+import { useState } from 'react';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import { PORTFOLIO } from '../../data/portfolio';
 
 const Contact = () => {
   const containerRef = useScrollReveal<HTMLDivElement>();
+  const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // This is a UI-only form as requested, so we'll just alert or simulate a submit
-    alert("Thank you for your interest! (Form submission is simulated).");
+    const name = (document.getElementById('form-name') as HTMLInputElement).value;
+    const email = (document.getElementById('form-email') as HTMLInputElement).value;
+    const message = (document.getElementById('form-message') as HTMLTextAreaElement).value;
+
+    const subject = encodeURIComponent(`Portfolio Contact from ${name}`);
+    const body = encodeURIComponent(`Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`);
+    
+    // Open default mail client pre-filled
+    window.location.href = `mailto:${PORTFOLIO.email}?subject=${subject}&body=${body}`;
+    
+    setSubmitted(true);
   };
 
   return (
@@ -85,54 +96,77 @@ const Contact = () => {
         </div>
 
         {/* Right Column - Contact Form UI */}
-        <div className="reveal-item p-4 xs:p-6 md:p-8 bg-[#111118]/70 border border-[#1E1E2E] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="form-name" className="block text-xs font-mono uppercase tracking-wider text-[#6B6B80] mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                id="form-name"
-                required
-                placeholder="John Doe"
-                className="w-full bg-[#0a0a0f] border border-[#1E1E2E] rounded-lg py-3 px-4 text-white font-sans text-sm focus:outline-none focus:border-[#6C63FF] focus:ring-1 focus:ring-[#6C63FF] transition-all duration-300"
-              />
+        <div className="reveal-item p-4 xs:p-6 md:p-8 bg-[#111118]/70 border border-[#1E1E2E] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] min-h-[360px] flex items-center justify-center">
+          {submitted ? (
+            <div className="text-center py-6 px-4 flex flex-col items-center justify-center w-full">
+              {/* Success Tick Icon */}
+              <div className="w-16 h-16 rounded-full bg-[#00D4FF]/10 text-[#00D4FF] flex items-center justify-center mb-6 shadow-[0_0_20px_rgba(0,212,255,0.2)] animate-pulse">
+                <svg className="w-8 h-8 stroke-current" fill="none" viewBox="0 0 24 24" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+              </div>
+              <h4 className="text-2xl font-heading font-bold text-white mb-3">
+                Message Drafted!
+              </h4>
+              <p className="text-[#6B6B80] font-sans text-sm leading-relaxed max-w-xs mb-6">
+                Your default email client was opened to send the message to **{PORTFOLIO.email}**. Thank you for reaching out!
+              </p>
+              <button
+                onClick={() => setSubmitted(false)}
+                className="interactive px-6 py-2.5 rounded-lg border border-[#1E1E2E] text-white hover:border-[#00D4FF] hover:text-[#00D4FF] transition-all duration-300 font-mono text-xs"
+              >
+                Send Another
+              </button>
             </div>
-            
-            <div>
-              <label htmlFor="form-email" className="block text-xs font-mono uppercase tracking-wider text-[#6B6B80] mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="form-email"
-                required
-                placeholder="john@example.com"
-                className="w-full bg-[#0a0a0f] border border-[#1E1E2E] rounded-lg py-3 px-4 text-white font-sans text-sm focus:outline-none focus:border-[#6C63FF] focus:ring-1 focus:ring-[#6C63FF] transition-all duration-300"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="form-message" className="block text-xs font-mono uppercase tracking-wider text-[#6B6B80] mb-2">
-                Message
-              </label>
-              <textarea
-                id="form-message"
-                required
-                rows={4}
-                placeholder="Hey Sumit, let's discuss..."
-                className="w-full bg-[#0a0a0f] border border-[#1E1E2E] rounded-lg py-3 px-4 text-white font-sans text-sm focus:outline-none focus:border-[#6C63FF] focus:ring-1 focus:ring-[#6C63FF] transition-all duration-300 resize-none"
-              ></textarea>
-            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-6 w-full">
+              <div>
+                <label htmlFor="form-name" className="block text-xs font-mono uppercase tracking-wider text-[#6B6B80] mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  id="form-name"
+                  required
+                  placeholder="John Doe"
+                  className="w-full bg-[#0a0a0f] border border-[#1E1E2E] rounded-lg py-3 px-4 text-white font-sans text-sm focus:outline-none focus:border-[#6C63FF] focus:ring-1 focus:ring-[#6C63FF] transition-all duration-300"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="form-email" className="block text-xs font-mono uppercase tracking-wider text-[#6B6B80] mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  id="form-email"
+                  required
+                  placeholder="john@example.com"
+                  className="w-full bg-[#0a0a0f] border border-[#1E1E2E] rounded-lg py-3 px-4 text-white font-sans text-sm focus:outline-none focus:border-[#6C63FF] focus:ring-1 focus:ring-[#6C63FF] transition-all duration-300"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="form-message" className="block text-xs font-mono uppercase tracking-wider text-[#6B6B80] mb-2">
+                  Message
+                </label>
+                <textarea
+                  id="form-message"
+                  required
+                  rows={4}
+                  placeholder="Hey Sumit, let's discuss..."
+                  className="w-full bg-[#0a0a0f] border border-[#1E1E2E] rounded-lg py-3 px-4 text-white font-sans text-sm focus:outline-none focus:border-[#6C63FF] focus:ring-1 focus:ring-[#6C63FF] transition-all duration-300 resize-none"
+                ></textarea>
+              </div>
 
-            <button
-              type="submit"
-              className="interactive w-full py-3.5 rounded-lg bg-[#6C63FF] text-[#E8E8F0] font-heading font-semibold hover:bg-[#6C63FF]/90 transition-all duration-300 shadow-[0_0_15px_rgba(108,99,255,0.2)] hover:shadow-[0_0_20px_rgba(108,99,255,0.4)]"
-            >
-              Send Message
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="interactive w-full py-3.5 rounded-lg bg-[#6C63FF] text-[#E8E8F0] font-heading font-semibold hover:bg-[#6C63FF]/90 transition-all duration-300 shadow-[0_0_15px_rgba(108,99,255,0.2)] hover:shadow-[0_0_20px_rgba(108,99,255,0.4)]"
+              >
+                Send Message
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </section>
