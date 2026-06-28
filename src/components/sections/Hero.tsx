@@ -4,30 +4,43 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PORTFOLIO } from '../../data/portfolio';
 
-// 3D Background scene element
-function Floating3DBackground() {
-  const meshRef = useRef<THREE.Mesh>(null);
+// Double rotating 3D centerpiece
+function DualRotatingSphere() {
+  const outerSphereRef = useRef<THREE.Mesh>(null);
+  const innerSphereRef = useRef<THREE.Mesh>(null);
   const pointsRef = useRef<THREE.Points>(null);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    if (meshRef.current) {
-      meshRef.current.rotation.x = time * 0.08;
-      meshRef.current.rotation.y = time * 0.12;
-      const pulse = 1.3 + Math.sin(time * 0.5) * 0.06;
-      meshRef.current.scale.set(pulse, pulse, pulse);
+    
+    // Outer Sphere - slow rotation
+    if (outerSphereRef.current) {
+      outerSphereRef.current.rotation.x = time * 0.05;
+      outerSphereRef.current.rotation.y = time * 0.08;
+      // Gentle breathing animation
+      const scale = 1.8 + Math.sin(time * 0.5) * 0.08;
+      outerSphereRef.current.scale.set(scale, scale, scale);
     }
+
+    // Inner Sphere - faster rotation in opposite direction
+    if (innerSphereRef.current) {
+      innerSphereRef.current.rotation.x = -time * 0.1;
+      innerSphereRef.current.rotation.y = -time * 0.15;
+      const scale = 1.0 + Math.sin(time * 0.5) * 0.04;
+      innerSphereRef.current.scale.set(scale, scale, scale);
+    }
+
+    // Dust particles
     if (pointsRef.current) {
-      pointsRef.current.rotation.y = -time * 0.03;
-      pointsRef.current.rotation.x = -time * 0.015;
+      pointsRef.current.rotation.y = -time * 0.02;
     }
   });
 
-  const count = 350;
+  const count = 400;
   const positions = useMemo(() => {
     const pos = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      const r = 2.5 + Math.random() * 3.5;
+      const r = 2.8 + Math.random() * 4.0;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
@@ -39,11 +52,19 @@ function Floating3DBackground() {
 
   return (
     <group>
-      <mesh ref={meshRef} position={[0, 0, 0]}>
-        <icosahedronGeometry args={[1.4, 1]} />
-        <meshBasicMaterial color="#6C63FF" wireframe transparent opacity={0.25} />
+      {/* Outer Dense Wireframe Sphere */}
+      <mesh ref={outerSphereRef}>
+        <icosahedronGeometry args={[1.3, 2]} />
+        <meshBasicMaterial color="#6C63FF" wireframe transparent opacity={0.35} />
+      </mesh>
+
+      {/* Inner Wireframe Sphere */}
+      <mesh ref={innerSphereRef}>
+        <icosahedronGeometry args={[0.8, 1]} />
+        <meshBasicMaterial color="#00D4FF" wireframe transparent opacity={0.3} />
       </mesh>
       
+      {/* Surrounding Particles */}
       <points ref={pointsRef}>
         <bufferGeometry>
           <bufferAttribute
@@ -59,7 +80,7 @@ function Floating3DBackground() {
           size={0.06}
           sizeAttenuation={true}
           transparent
-          opacity={0.5}
+          opacity={0.6}
           depthWrite={false}
         />
       </points>
@@ -69,49 +90,56 @@ function Floating3DBackground() {
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const name = PORTFOLIO.name;
-  const nameChars = useMemo(() => Array.from(name), [name]);
+
+  // Split name for two lines (e.g. "SUMIT" and "PARISE")
+  const nameParts = useMemo(() => {
+    const parts = PORTFOLIO.name.toUpperCase().split(' ');
+    return {
+      first: parts[0] || 'SUMIT',
+      second: parts[1] || 'PARISE'
+    };
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // 1. Reveal name characters
+      // 1. Line-by-line reveal of the name
       gsap.fromTo(
-        '.char',
+        '.reveal-name-line',
+        { opacity: 0, y: '100%' },
+        {
+          opacity: 1,
+          y: '0%',
+          stagger: 0.15,
+          duration: 1.0,
+          ease: 'power4.out',
+          delay: 0.3,
+        }
+      );
+
+      // 2. Fade in subtitle, tagline and right side elements
+      gsap.fromTo(
+        '.hero-fade-in',
         { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
-          stagger: 0.03,
-          duration: 0.8,
-          ease: 'back.out(1.5)',
-          delay: 0.4,
-        }
-      );
-
-      // 2. Fade in labels and items
-      gsap.fromTo(
-        '.hero-fade-in',
-        { opacity: 0, y: 25 },
-        {
-          opacity: 1,
-          y: 0,
-          stagger: 0.12,
-          duration: 0.9,
+          stagger: 0.15,
+          duration: 1.0,
           ease: 'power3.out',
-          delay: 0.8,
+          delay: 0.7,
         }
       );
 
-      // 3. Fade in 3D Canvas
+      // 3. Scale and fade in the centerpiece 3D Canvas
       gsap.fromTo(
         '.canvas-container',
-        { opacity: 0, scale: 0.9 },
+        { opacity: 0, scale: 0.8 },
         {
           opacity: 1,
           scale: 1,
-          duration: 1.6,
+          duration: 1.8,
           ease: 'power2.out',
-          delay: 0.5,
+          delay: 0.4,
         }
       );
     }, containerRef);
@@ -119,19 +147,11 @@ const Hero = () => {
     return () => ctx.revert();
   }, []);
 
-  const handleScrollTo = (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
-    e.preventDefault();
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   return (
     <section
       id="hero"
       ref={containerRef}
-      className="relative w-full h-screen bg-[#0a0a0f] overflow-hidden flex flex-col justify-between lg:justify-center items-center py-24 lg:py-0"
+      className="relative w-full h-screen bg-[#0a0a0f] overflow-hidden flex flex-col justify-center items-center px-6 md:px-12"
     >
       {/* Signature Breathing Aurora Background */}
       <div className="aurora-container">
@@ -139,88 +159,63 @@ const Hero = () => {
         <div className="aurora-glow-cyan"></div>
       </div>
 
-      {/* 3D Background Canvas (Centerpiece) */}
+      {/* 3D Centerpiece WebGL Canvas */}
       <div className="canvas-container absolute inset-0 w-full h-full z-10 flex items-center justify-center pointer-events-none opacity-0">
-        <div className="w-full max-w-[800px] h-[75vh] md:h-screen">
-          <Canvas camera={{ position: [0, 0, 6], fov: 60 }}>
-            <ambientLight intensity={0.6} />
-            <Floating3DBackground />
+        <div className="w-full max-w-[900px] h-[80vh] md:h-screen">
+          <Canvas camera={{ position: [0, 0, 5.5], fov: 60 }}>
+            <ambientLight intensity={0.5} />
+            <DualRotatingSphere />
           </Canvas>
         </div>
       </div>
 
-      {/* Left Column (Desktop: left sidebar role, Mobile: top center) */}
-      <div className="relative z-20 w-full max-w-6xl mx-auto px-6 md:px-12 flex flex-col lg:flex-row justify-between items-center h-full lg:h-auto gap-8 lg:gap-0">
+      {/* Main Content Grid split horizontally */}
+      <div className="relative z-20 w-full max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-center h-full lg:h-auto py-20 lg:py-0 gap-12 lg:gap-0">
         
-        {/* Name Column */}
-        <div className="w-full lg:w-auto text-left lg:max-w-md self-start lg:self-center">
-          <p className="hero-fade-in text-[#6C63FF] font-mono text-sm tracking-[0.2em] uppercase mb-2 opacity-0">
+        {/* Left Column: Big Uppercase Split Name */}
+        <div className="w-full lg:w-[45%] text-left self-start lg:self-center">
+          <p className="hero-fade-in text-[#6C63FF] font-mono text-sm tracking-[0.25em] uppercase mb-4 opacity-0">
             Hello! I'm
           </p>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-heading font-extrabold text-white tracking-tight leading-[1.1] mb-4 select-none">
-            {nameChars.map((char, index) => (
-              <span
-                key={index}
-                className="char inline-block opacity-0"
-                style={{ whiteSpace: char === ' ' ? 'pre' : 'normal' }}
-              >
-                {char}
+          
+          <h1 className="font-heading font-black text-6xl md:text-8xl tracking-wider leading-[0.85] uppercase flex flex-col items-start mb-6">
+            <div className="overflow-hidden h-fit py-1">
+              <span className="reveal-name-line inline-block opacity-0 translate-y-full text-white">
+                {nameParts.first}
               </span>
-            ))}
+            </div>
+            <div className="overflow-hidden h-fit py-1">
+              <span className="reveal-name-line inline-block opacity-0 translate-y-full text-[#6C63FF]">
+                {nameParts.second}
+              </span>
+            </div>
           </h1>
-          <p className="hero-fade-in text-[#6B6B80] font-sans text-sm md:text-base leading-relaxed opacity-0 max-w-sm">
+
+          <p className="hero-fade-in text-[#6B6B80] font-mono text-xs md:text-sm tracking-wider opacity-0 max-w-sm">
             {PORTFOLIO.tagline}
           </p>
         </div>
 
-        {/* Right Column (Desktop: right sidebar role, Mobile: bottom center) */}
-        <div className="w-full lg:w-auto text-left lg:max-w-md self-end lg:self-center flex flex-col items-start lg:items-end">
+        {/* Right Column: Overlapping Roles */}
+        <div className="w-full lg:w-[45%] text-left lg:text-right self-end lg:self-center flex flex-col items-start lg:items-end">
           <div className="hero-fade-in flex flex-col items-start lg:items-end relative select-none opacity-0">
-            <span className="text-[#00D4FF] font-mono text-sm tracking-widest uppercase mb-1">
+            <span className="text-[#00D4FF] font-mono text-sm tracking-[0.25em] uppercase mb-4">
               A Creative
             </span>
-            <div className="relative font-heading font-extrabold tracking-wider leading-none mt-2 select-none">
-              {/* Back Outline text */}
-              <div className="text-outline-gray text-5xl md:text-7xl opacity-35 select-none uppercase">
+            
+            <div className="relative font-heading font-black leading-none uppercase tracking-widest mt-1">
+              {/* Back outlined blurred role */}
+              <div className="text-outline-gray text-6xl md:text-8xl opacity-15 select-none leading-none tracking-widest font-black">
                 DEVELOPER
               </div>
-              {/* Front Solid Text */}
-              <div className="absolute top-4 left-4 lg:left-auto lg:right-4 text-[#E8E8F0] text-4xl md:text-6xl font-black drop-shadow-[0_0_15px_rgba(108,99,255,0.35)] uppercase">
+              {/* Front solid overlapping role */}
+              <div className="absolute top-[1.8rem] left-4 lg:left-auto lg:right-4 text-[#E8E8F0] text-5xl md:text-7xl font-extrabold select-none tracking-wider leading-none drop-shadow-[0_0_20px_rgba(108,99,255,0.4)]">
                 ENGINEER
               </div>
             </div>
           </div>
-          
-          {/* Scroll Button Overlay */}
-          <div className="hero-fade-in mt-12 flex gap-4 opacity-0">
-            <button
-              onClick={(e) => handleScrollTo(e, 'projects')}
-              className="interactive px-6 py-2.5 rounded-full border border-[#6C63FF] text-[#E8E8F0] text-xs font-heading font-semibold hover:bg-[#6C63FF]/15 hover:border-[#00D4FF] transition-all duration-300 shadow-[0_0_15px_rgba(108,99,255,0.1)]"
-            >
-              My Work
-            </button>
-            <button
-              onClick={(e) => handleScrollTo(e, 'contact')}
-              className="interactive px-6 py-2.5 rounded-full border border-[#1E1E2E] bg-[#111118]/80 text-[#6B6B80] hover:text-white hover:border-[#6C63FF] transition-all duration-300 text-xs font-heading font-semibold"
-            >
-              Contact
-            </button>
-          </div>
         </div>
 
-      </div>
-
-      {/* Down Scroll Indicator */}
-      <div className="hero-fade-in absolute bottom-6 z-20 animate-bounce hidden lg:block opacity-0">
-        <button
-          onClick={(e) => handleScrollTo(e, 'about')}
-          className="text-[#6B6B80] hover:text-[#00D4FF] transition-colors duration-300"
-          aria-label="Scroll Down"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-          </svg>
-        </button>
       </div>
     </section>
   );
