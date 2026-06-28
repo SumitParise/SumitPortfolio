@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
+import { SkeletonUtils } from "three-stdlib";
 import setCharacter from "./utils/character";
 import setLighting from "./utils/lighting";
 import { useLoading } from "../../context/LoadingProvider";
@@ -22,7 +23,6 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
   const [inView, setInView] = useState(false);
   const [loadingModel, setLoadingModel] = useState(true);
   const [hasWebGL, setHasWebGL] = useState(true);
-  const [character, setChar] = useState<THREE.Object3D | null>(null);
 
   // 1. Intersection Observer to conditionally mount WebGL Canvas
   useEffect(() => {
@@ -35,7 +35,7 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       },
       {
         threshold: 0.01,
-        rootMargin: "150px", // Load 150px before entering viewport to prevent delay
+        rootMargin: "150px", // Preload slightly before viewport entry
       }
     );
     observer.observe(el);
@@ -45,8 +45,6 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
   // 2. Initialize WebGL scene only when inView is true
   useEffect(() => {
     if (!inView) {
-      // Clean up character state when out of view
-      setChar(null);
       setLoadingModel(true);
       return;
     }
@@ -96,24 +94,32 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       const light = setLighting(scene);
       const { loadCharacter } = setCharacter(renderer, scene, camera);
 
+      let onResize: (() => void) | null = null;
+
       loadCharacter()
         .then((gltf) => {
           if (gltf) {
-            const animations = setAnimations(gltf);
-            hoverDivRef.current && animations.hover(gltf, hoverDivRef.current);
+            // Clone the skeleton structure and meshes to render in different scenes simultaneously
+            const clonedScene = SkeletonUtils.clone(gltf.scene);
+            const clonedGltf: any = {
+              ...gltf,
+              scene: clonedScene
+            };
+
+            const animations = setAnimations(clonedGltf);
+            hoverDivRef.current && animations.hover(clonedGltf, hoverDivRef.current);
             mixer = animations.mixer;
-            let charScene = gltf.scene;
 
             if (view === "about") {
-              charScene.rotation.set(0, 0.7, 0);
+              clonedScene.rotation.set(0, 0.7, 0);
             } else {
-              charScene.rotation.set(0.12, 0.92, 0);
-              const neckBone = charScene.getObjectByName("spine005");
+              clonedScene.rotation.set(0.12, 0.92, 0);
+              const neckBone = clonedScene.getObjectByName("spine005");
               if (neckBone) {
                 neckBone.rotation.x = 0.6;
               }
 
-              charScene.traverse((child: any) => {
+              clonedScene.traverse((child: any) => {
                 if (child.name === "screenlight" && child.material) {
                   child.material.transparent = true;
                   child.material.opacity = 1;
@@ -125,10 +131,9 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
               });
             }
 
-            setChar(charScene);
-            scene.add(charScene);
-            headBone = charScene.getObjectByName("spine006") || null;
-            screenLight = charScene.getObjectByName("screenlight") || null;
+            scene.add(clonedScene);
+            headBone = clonedScene.getObjectByName("spine006") || null;
+            screenLight = clonedScene.getObjectByName("screenlight") || null;
             setLoadingModel(false);
             setLoading(100);
 
@@ -142,11 +147,12 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
               animations.startIntro();
             }
 
-            window.addEventListener("resize", () => {
+            onResize = () => {
               if (renderer) {
-                handleResize(renderer, camera, canvasDiv, charScene);
+                handleResize(renderer, camera, canvasDiv, clonedScene);
               }
-            });
+            };
+            window.addEventListener("resize", onResize);
           }
         })
         .catch((err) => {
@@ -221,11 +227,9 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
             canvasDiv.current.removeChild(renderer.domElement);
           }
         }
-        window.removeEventListener("resize", () => {
-          if (renderer && character) {
-            handleResize(renderer, camera, canvasDiv, character);
-          }
-        });
+        if (onResize) {
+          window.removeEventListener("resize", onResize);
+        }
         document.removeEventListener("mousemove", onMouseMove);
         if (landingDiv) {
           landingDiv.removeEventListener("touchstart", onTouchStart);
@@ -237,10 +241,10 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
 
   return (
     <div ref={containerRef} className="character-container relative w-full h-full flex items-center justify-center">
-      {/* 1. Purple Circle Rim Backdrop (Always Visible for Visual Continuity) */}
+      {/* 1. Purple Circle Rim Backdrop */}
       <div className="character-rim"></div>
 
-      {/* 2. Static Fallback/Placeholder Image (Visible during decryption and load) */}
+      {/* 2. Static Fallback/Placeholder Image */}
       {(!hasWebGL || loadingModel) && (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none select-none">
           <img
@@ -251,7 +255,7 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
         </div>
       )}
 
-      {/* 3. 3D WebGL Canvas Container (Mounted only when inView is true) */}
+      {/* 3. 3D WebGL Canvas Container */}
       {hasWebGL && inView && (
         <div className="character-model w-full h-full absolute inset-0 z-20" ref={canvasDiv}>
           <div className="character-hover w-full h-full" ref={hoverDivRef}></div>
