@@ -10,6 +10,7 @@ export const Loading = ({ onComplete }: LoadingProps) => {
   const [isWelcome, setIsWelcome] = useState(false);
   const screenRef = useRef<HTMLDivElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // 1. Simulate loading progress
@@ -23,7 +24,7 @@ export const Loading = ({ onComplete }: LoadingProps) => {
         handleLoaded();
       }
       setPercent(start);
-    }, 50);
+    }, 45);
 
     return () => clearInterval(interval);
   }, []);
@@ -32,30 +33,38 @@ export const Loading = ({ onComplete }: LoadingProps) => {
     // 2. Transition from loading count to Welcome
     setTimeout(() => {
       setIsWelcome(true);
-      // 3. Zoom expand and fade out the entire loader screen
+      
+      // 3. Expand the black pill like a mask to swallow the screen
       setTimeout(() => {
-        const screen = screenRef.current;
         const pill = pillRef.current;
-        if (screen && pill) {
+        const text = textRef.current;
+        
+        if (pill) {
           const tl = gsap.timeline({
             onComplete: onComplete
           });
           
-          // Springy scale out of pill, then full screen zoom out
+          // Fade out the welcome text inside the pill first
+          if (text) {
+            tl.to(text, {
+              opacity: 0,
+              duration: 0.25,
+              ease: 'power2.out'
+            });
+          }
+          
+          // Expand the black pill radially to cover the screen
+          const size = Math.max(window.innerWidth, window.innerHeight) * 2.8;
           tl.to(pill, {
-            scale: 0.85,
-            opacity: 0,
-            duration: 0.4,
-            ease: 'power3.inOut'
-          })
-          .to(screen, {
-            opacity: 0,
-            duration: 0.8,
-            ease: 'power2.inOut'
-          }, '-=0.2');
+            width: size,
+            height: size,
+            borderRadius: '50%',
+            duration: 0.95,
+            ease: 'power3.in',
+          }, '-=0.1');
         }
       }, 1000);
-    }, 500);
+    }, 400);
   };
 
   return (
@@ -88,24 +97,34 @@ export const Loading = ({ onComplete }: LoadingProps) => {
         </div>
       </div>
 
-      {/* Center Black Loading Pill */}
+      {/* Center Black Loading Pill (Expands to engulf screen) */}
       <div
         ref={pillRef}
-        className="relative z-10 px-10 py-5 rounded-full bg-[#0a0a0f] border border-[#1E1E2E] shadow-[0_20px_50px_rgba(0,0,0,0.25)] flex items-center justify-center min-w-[240px] md:min-w-[300px] h-[64px] md:h-[76px] transition-all duration-500 ease-in-out"
+        className="relative z-10 rounded-full bg-[#0a0a0f] border border-[#1E1E2E]/80 shadow-[0_20px_50px_rgba(0,0,0,0.25)] flex items-center justify-center overflow-hidden"
+        style={{
+          width: '260px',
+          height: '68px'
+        }}
       >
         {/* Glow behind pill */}
         <div className="absolute inset-0 rounded-full bg-[#6C63FF]/5 filter blur-md pointer-events-none"></div>
 
-        <div className="relative z-10 font-heading font-semibold text-sm md:text-lg text-white uppercase tracking-wider flex items-center gap-2 select-none">
+        {/* Text container */}
+        <div
+          ref={textRef}
+          className="relative z-10 font-heading font-semibold text-sm md:text-base text-white uppercase tracking-wider flex items-center gap-2 select-none"
+        >
           {!isWelcome ? (
-            <div className="flex items-center justify-center gap-1.5 transition-all duration-300">
+            <div className="flex items-center justify-center gap-1.5">
               <span>LOADING</span>
               <span className="text-[#00D4FF] font-mono font-medium ml-2">{percent}%</span>
               {/* Blinking terminal cursor block */}
               <span className="inline-block w-2.5 h-4 bg-white animate-pulse ml-0.5"></span>
             </div>
           ) : (
-            <div className="flex items-center justify-center animate-fade-in">
+            <div className="flex items-center justify-center gap-1.5 animate-fade-in">
+              {/* Blinking block cursor left of welcome */}
+              <span className="inline-block w-2.5 h-4 bg-white animate-pulse mr-0.5"></span>
               <span className="text-[#6C63FF] font-bold tracking-widest">WELCOME</span>
             </div>
           )}
