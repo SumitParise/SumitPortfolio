@@ -1,148 +1,134 @@
-import { useEffect, useState, useRef } from 'react';
-import gsap from 'gsap';
+import { useEffect, useState } from "react";
+import "../styles/Loading.css";
 
 interface LoadingProps {
   onComplete: () => void;
 }
 
-export const Loading = ({ onComplete }: LoadingProps) => {
+const Loading = ({ onComplete }: LoadingProps) => {
   const [percent, setPercent] = useState(0);
-  const [isWelcome, setIsWelcome] = useState(false);
-  const screenRef = useRef<HTMLDivElement>(null);
-  const pillRef = useRef<HTMLDivElement>(null);
-  const textRef = useRef<HTMLDivElement>(null);
+  const [loaded, setLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [clicked, setClicked] = useState(false);
 
+  // 1. Loading Simulation
   useEffect(() => {
-    // 1. Fast loading progress simulation (~350ms to load)
-    let start = 0;
+    let percentVal = 0;
     const interval = setInterval(() => {
-      const step = Math.floor(Math.random() * 6) + 4;
-      start += step;
-      if (start >= 100) {
-        start = 100;
+      if (percentVal <= 50) {
+        const rand = Math.round(Math.random() * 5) + 2;
+        percentVal = Math.min(50, percentVal + rand);
+        setPercent(percentVal);
+      } else {
         clearInterval(interval);
-        handleLoaded();
+        const slowInterval = setInterval(() => {
+          percentVal = percentVal + Math.round(Math.random() * 2);
+          if (percentVal >= 100) {
+            percentVal = 100;
+            setPercent(100);
+            clearInterval(slowInterval);
+          } else {
+            setPercent(percentVal);
+          }
+        }, 80);
       }
-      setPercent(start);
-    }, 25);
+    }, 50);
 
     return () => clearInterval(interval);
   }, []);
 
-  const handleLoaded = () => {
-    // 2. Transition from loading count to Welcome
-    setTimeout(() => {
-      setIsWelcome(true);
-      
-      // 3. Cinematic expand and slide transition
-      setTimeout(() => {
-        const screen = screenRef.current;
-        const pill = pillRef.current;
-        const text = textRef.current;
-        
-        if (screen && pill) {
-          const tl = gsap.timeline({
-            onComplete: onComplete
-          });
-          
-          // Fade out the welcome text inside the pill
-          if (text) {
-            tl.to(text, {
-              opacity: 0,
-              duration: 0.2,
-              ease: 'power2.out'
-            });
-          }
-          
-          // Expand the black pill radially to swallow the screen
-          const size = Math.max(window.innerWidth, window.innerHeight) * 3.0;
-          tl.to(pill, {
-            width: size,
-            height: size,
-            borderRadius: '50%',
-            duration: 0.8,
-            ease: 'power4.in',
-          }, '-=0.1')
-          // Cinematic Curtain Slide Reveal: Slide the whole curtain UP
-          .to(screen, {
-            y: '-100%',
-            duration: 0.95,
-            ease: 'power4.inOut'
-          }, '-=0.15');
-        }
-      }, 800);
-    }, 200);
+  // 2. Loading complete transitions
+  useEffect(() => {
+    if (percent >= 100) {
+      const t1 = setTimeout(() => {
+        setLoaded(true);
+        const t2 = setTimeout(() => {
+          setIsLoaded(true);
+        }, 1000);
+        return () => clearTimeout(t2);
+      }, 600);
+      return () => clearTimeout(t1);
+    }
+  }, [percent]);
+
+  // 3. Welcome clicked / page transition trigger
+  useEffect(() => {
+    if (isLoaded) {
+      setClicked(true);
+      const timer = setTimeout(() => {
+        onComplete();
+      }, 900);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoaded, onComplete]);
+
+  // 4. Mouse movement tracking for spotlight radial glow
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const { currentTarget: target } = e;
+    const rect = target.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    target.style.setProperty("--mouse-x", `${x}px`);
+    target.style.setProperty("--mouse-y", `${y}px`);
   };
 
   return (
-    <div
-      ref={screenRef}
-      className="fixed inset-0 z-[99999] bg-[#eae5ec] flex flex-col justify-center items-center select-none overflow-hidden"
-    >
-      {/* Top Header Mockup */}
-      <div className="absolute top-0 left-0 w-full px-8 py-8 md:px-16 flex justify-between items-center pointer-events-none">
-        <span className="font-heading font-black text-lg md:text-xl tracking-widest text-[#0a0a0f]">
+    <>
+      {/* Header bar of loading screen */}
+      <div className="loading-header">
+        <a href="/#" className="loader-title font-heading uppercase font-extrabold tracking-widest" data-cursor="disable">
           SP
-        </span>
-        {/* Mock visualizer bars */}
-        <div className="flex gap-1.5 items-end h-6">
-          <span className="w-[2px] h-3 bg-[#0a0a0f] animate-pulse"></span>
-          <span className="w-[2px] h-6 bg-[#0a0a0f] animate-pulse delay-75"></span>
-          <span className="w-[2px] h-4 bg-[#0a0a0f] animate-pulse delay-150"></span>
+        </a>
+        
+        {/* Pong game visualizer */}
+        <div className={`loaderGame ${clicked ? "loader-out" : ""}`}>
+          <div className="loaderGame-container">
+            <div className="loaderGame-in">
+              {[...Array(27)].map((_, index) => (
+                <div className="loaderGame-line" key={index}></div>
+              ))}
+            </div>
+            <div className="loaderGame-ball"></div>
+          </div>
         </div>
       </div>
 
-      {/* Massive Scrolling Marquee Background */}
-      <div className="absolute top-1/2 left-0 w-full overflow-hidden -translate-y-1/2 pointer-events-none select-none">
-        <div className="flex whitespace-nowrap animate-marquee font-heading font-black text-8xl md:text-[10rem] tracking-widest text-[#0a0a0f]/5 uppercase leading-none">
-          <span>
-            CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; &nbsp;
-          </span>
-          <span>
-            CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; A CREATIVE DEVELOPER &bull; &nbsp;
-          </span>
+      <div className="loading-screen select-none pointer-events-none">
+        {/* Scrolling text marquee */}
+        <div className="loading-marquee font-heading">
+          <div className="flex whitespace-nowrap animate-marquee">
+            <span> A Creative Developer</span> <span>A Creative Designer</span>
+            <span> A Creative Developer</span> <span>A Creative Designer</span>
+            <span> A Creative Developer</span> <span>A Creative Designer</span>
+            <span> A Creative Developer</span> <span>A Creative Designer</span>
+          </div>
         </div>
-      </div>
 
-      {/* Center Black Loading Pill (Dynamic aura) */}
-      <div
-        ref={pillRef}
-        className="relative z-10 rounded-full bg-[#0a0a0f] border border-[#1E1E2E] shadow-[0_25px_60px_rgba(0,0,0,0.35)] flex items-center justify-center overflow-hidden"
-        style={{
-          width: '320px',
-          height: '76px'
-        }}
-      >
-        {/* Dynamic Growing Glow Aura */}
+        {/* Center Pill Button Container */}
         <div
-          className="absolute inset-0 opacity-25 filter blur-md pointer-events-none transition-all duration-300"
-          style={{
-            transform: `scale(${1 + (percent / 100) * 0.5})`,
-            background: `radial-gradient(circle, ${percent < 50 ? '#6C63FF' : '#00D4FF'} 0%, transparent 80%)`
-          }}
-        ></div>
-
-        {/* Text container */}
-        <div
-          ref={textRef}
-          className="relative z-10 font-heading font-bold text-base md:text-lg text-white uppercase tracking-wider flex items-center gap-2 select-none"
+          className={`loading-wrap pointer-events-auto ${clicked ? "loading-clicked" : ""}`}
+          onMouseMove={handleMouseMove}
         >
-          {!isWelcome ? (
-            <div className="flex items-center justify-center gap-1.5">
-              <span>LOADING</span>
-              <span className="text-[#00D4FF] font-mono font-semibold ml-2">{percent}%</span>
-              {/* Blinking terminal cursor block */}
-              <span className="inline-block w-2.5 h-4 bg-white animate-pulse ml-0.5"></span>
+          <div className="loading-hover"></div>
+          <div className={`loading-button ${loaded ? "loading-complete" : ""}`}>
+            {/* Loading text/percent element */}
+            <div className="loading-container">
+              <div className="loading-content font-heading font-bold text-white uppercase">
+                <div className="loading-content-in">
+                  Loading <span className="font-mono text-[#00D4FF]">{percent}%</span>
+                </div>
+              </div>
+              <div className="loading-box"></div>
             </div>
-          ) : (
-            <div className="flex items-center justify-center gap-1.5 animate-fade-in">
-              <span className="inline-block w-2.5 h-4 bg-white animate-pulse mr-0.5"></span>
-              <span className="text-[#6C63FF] font-black tracking-[0.2em]">WELCOME</span>
+
+            {/* Welcome transition text */}
+            <div className="loading-content2 font-heading font-black text-white">
+              <span>Welcome</span>
             </div>
-          )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

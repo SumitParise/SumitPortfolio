@@ -183,10 +183,10 @@ const TechStack = () => {
 
         {/* Sun / Moon (Crescent styled in Night mode) */}
         <div
-          className={`absolute transition-all duration-1000 ease-in-out ${
+          className={`absolute rounded-full transition-all duration-1000 ease-in-out ${
             isNight
               ? 'w-10 h-10 bg-transparent shadow-[-8px_8px_0_0_#fef08a] top-[10%] left-[22%] rotate-[15deg]'
-              : 'w-16 h-16 bg-yellow-300 rounded-full shadow-[0_0_40px_rgba(253,224,71,0.5)] top-[18%] left-[18%]'
+              : 'w-16 h-16 bg-yellow-300 shadow-[0_0_40px_rgba(253,224,71,0.5)] top-[18%] left-[18%]'
           }`}
         ></div>
 

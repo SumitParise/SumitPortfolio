@@ -46,7 +46,7 @@ const Contact = () => {
             {/* Email mailto link */}
             <a
               href={`mailto:${PORTFOLIO.email}`}
-              className="interactive font-heading text-2xl sm:text-3xl md:text-4xl font-bold text-white hover:text-[#00D4FF] transition-colors duration-300 relative py-2 mb-10 block w-fit border-b border-dashed border-[#6C63FF] hover:border-[#00D4FF]"
+              className="interactive font-heading text-lg sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white hover:text-[#00D4FF] transition-colors duration-300 relative py-2 mb-10 block w-fit border-b border-dashed border-[#6C63FF] hover:border-[#00D4FF] break-all max-w-full overflow-hidden text-ellipsis"
             >
               {PORTFOLIO.email}
             </a>
@@ -85,7 +85,7 @@ const Contact = () => {
         </div>
 
         {/* Right Column - Contact Form UI */}
-        <div className="reveal-item p-6 md:p-8 bg-[#111118]/70 border border-[#1E1E2E] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+        <div className="reveal-item p-4 xs:p-6 md:p-8 bg-[#111118]/70 border border-[#1E1E2E] rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="form-name" className="block text-xs font-mono uppercase tracking-wider text-[#6B6B80] mb-2">
