@@ -150,9 +150,9 @@ const TechStack = () => {
         </p>
       </div>
 
-      {/* 2D Landscape Viewport */}
+      {/* 2D Landscape Viewport (Fixed: Changed transition-all to transition-colors to resolve GSAP conflict) */}
       <div
-        className={`reveal-item w-full h-[45vh] md:h-[55vh] border border-[#1E1E2E]/60 rounded-2xl relative overflow-hidden flex flex-col justify-end shadow-2xl transition-all duration-700 ${
+        className={`reveal-item w-full h-[45vh] md:h-[55vh] border border-[#1E1E2E]/60 rounded-2xl relative overflow-hidden flex flex-col justify-end shadow-2xl transition-colors duration-700 ${
           isNight
             ? 'bg-gradient-to-b from-indigo-950 via-purple-900 to-orange-800'
             : 'bg-gradient-to-b from-sky-400 to-sky-100'
