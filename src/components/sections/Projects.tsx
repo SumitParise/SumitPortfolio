@@ -18,7 +18,7 @@ const Projects = () => {
     <section
       id="projects"
       ref={containerRef}
-      className="py-20 md:py-36 bg-black overflow-hidden relative"
+      className="py-20 md:py-36 bg-[#0a0a0f] overflow-hidden relative"
     >
       {/* Background Theme Aurora Accents */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
