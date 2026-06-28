@@ -243,41 +243,95 @@ const TechStack = () => {
                 onMouseEnter={() => setIsPaused(true)}
                 onMouseLeave={() => setIsPaused(false)}
               >
-                {/* Building Frame */}
+                {/* Building Frame with Architectural Details */}
                 <div
-                  className={`w-32 md:w-36 ${heightClass} ${buildingStyle} border-t-2 border-x border-white/10 p-3 flex flex-col justify-between relative shadow-lg hover:border-white/30 hover:scale-[1.02] transition-all duration-300`}
+                  className={`w-32 md:w-36 ${heightClass} ${buildingStyle} border-t-2 border-x border-white/10 p-2.5 flex flex-col justify-between relative shadow-lg hover:border-white/30 hover:scale-[1.02] transition-all duration-300`}
                   style={{
                     backgroundColor: isNight ? '#11111a' : '#eae5ec',
                   }}
                 >
-                  {/* Skyscraper Windows Grid */}
-                  <div className="grid grid-cols-3 gap-2.5 w-full opacity-65">
-                    {[...Array(6)].map((_, wIdx) => (
-                      <div
-                        key={wIdx}
-                        className={`w-3.5 h-2.5 rounded-sm transition-all duration-500 ${
-                          isNight 
-                            ? (idx + wIdx) % 3 === 0 ? 'bg-yellow-200 shadow-md' : 'bg-neutral-800'
-                            : 'bg-white border border-neutral-300'
-                        }`}
-                      ></div>
-                    ))}
+                  {/* Roof decorations (spires, water towers, HVAC) */}
+                  <div className="absolute top-[-16px] left-4 flex items-end gap-2 pointer-events-none">
+                    {idx % 3 === 0 && (
+                      /* Metal Antenna spire with flashing warning light */
+                      <div className="w-[2px] h-4 bg-neutral-500 relative">
+                        <div className="absolute top-0 left-[-2px] w-1.5 h-1.5 rounded-full bg-red-500 animate-ping"></div>
+                      </div>
+                    )}
+                    {idx % 3 === 1 && (
+                      /* Roof water tank */
+                      <div className="flex flex-col items-center">
+                        <div className="w-5 h-4 bg-neutral-600 rounded border border-white/10"></div>
+                        <div className="w-4 h-1 bg-neutral-700"></div>
+                      </div>
+                    )}
+                    {idx % 3 === 2 && (
+                      /* HVAC air conditioning unit */
+                      <div className="w-6 h-3 bg-neutral-600 rounded border border-white/5"></div>
+                    )}
                   </div>
 
-                  {/* Storefront Signboard Banner */}
-                  <div
-                    className="w-full py-2 rounded border text-center font-heading font-black text-[10px] md:text-xs tracking-wider shadow-md"
-                    style={{
-                      backgroundColor: '#0a0a0f',
-                      borderColor: color,
-                      color: color,
-                      boxShadow: `0 0 10px ${color}35`
-                    }}
-                  >
-                    {skill.toUpperCase()}
-                    <span className="block text-[6px] font-mono opacity-60 tracking-widest mt-0.5">
-                      {isDevelop ? 'DEV // BACK' : 'DSN // FRONT'}
-                    </span>
+                  {/* Window Grid with Individual Panes */}
+                  <div className="grid grid-cols-3 gap-2 w-full opacity-70">
+                    {[...Array(6)].map((_, wIdx) => {
+                      const isLit = isNight && (idx + wIdx) % 3 !== 0;
+                      return (
+                        <div
+                          key={wIdx}
+                          className={`w-3.5 h-4 rounded-sm border transition-all duration-500 relative overflow-hidden ${
+                            isLit 
+                              ? 'bg-yellow-100 border-yellow-300 shadow-[0_0_8px_rgba(253,224,71,0.4)]' 
+                              : 'bg-neutral-800 border-neutral-700'
+                          }`}
+                        >
+                          {/* Inner Pane divider */}
+                          <div className="absolute inset-x-0 top-1.5 h-[1px] bg-neutral-600/30"></div>
+                          <div className="absolute inset-y-0 left-1.5 w-[1px] bg-neutral-600/30"></div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Shop storefront banner with striped awning */}
+                  <div className="w-full relative flex flex-col items-center mt-2">
+                    {/* Awning Canopy */}
+                    <div 
+                      className="w-[108%] h-2.5 rounded-t border-b border-white/20 shadow-md relative z-10"
+                      style={{ backgroundColor: color }}
+                    ></div>
+                    
+                    {/* Storefront Signboard */}
+                    <div
+                      className="w-full py-1.5 rounded-b border-x border-b text-center font-heading font-black text-[9px] md:text-[10px] tracking-wider shadow-md bg-[#0a0a0f]"
+                      style={{
+                        borderColor: color,
+                        color: color,
+                        boxShadow: `0 3px 8px ${color}25`
+                      }}
+                    >
+                      {skill.toUpperCase()}
+                      <span className="block text-[5px] font-mono opacity-60 tracking-widest mt-0.5">
+                        {isDevelop ? 'DEV // BACK' : 'DSN // FRONT'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Storefront Entry Door & Window Pane */}
+                  <div className="w-full h-10 border-t border-neutral-600/10 mt-1 flex items-end justify-between px-1 pointer-events-none">
+                    {/* Double glass doors */}
+                    <div className="w-6 h-9 border border-neutral-600/30 rounded-t flex justify-center items-center">
+                      <div className="w-[1px] h-full bg-neutral-600/30"></div>
+                    </div>
+                    {/* Display window showing OPEN sign */}
+                    <div className="w-10 h-7 border border-neutral-600/30 rounded-sm bg-black/10 flex items-center justify-center">
+                      <span className="text-[5px] opacity-35 font-mono">OPEN</span>
+                    </div>
+                  </div>
+
+                  {/* Sidewalk Leafy Plant Pot */}
+                  <div className="absolute bottom-0 left-[-8px] w-3 flex flex-col items-center pointer-events-none z-10">
+                    <div className={`w-3.5 h-3.5 rounded-full ${isNight ? 'bg-emerald-950' : 'bg-emerald-500'} opacity-80`} />
+                    <div className="w-2.5 h-2 bg-amber-700 rounded-b-sm border-t border-amber-600" />
                   </div>
                 </div>
 
