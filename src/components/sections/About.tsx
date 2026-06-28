@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useScrollReveal from '../../hooks/useScrollReveal';
@@ -27,6 +27,12 @@ function About3DVisual() {
 
 const About = () => {
   const sectionRef = useScrollReveal<HTMLDivElement>();
+  const [showCanvas, setShowCanvas] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCanvas(true), 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <section
@@ -42,10 +48,12 @@ const About = () => {
           <div className="absolute w-48 h-48 rounded-full bg-[#00D4FF]/10 filter blur-3xl animate-pulse delay-500"></div>
 
           <div className="w-full h-full max-w-[350px]">
-            <Canvas camera={{ position: [0, 0, 4.5], fov: 60 }}>
-              <ambientLight intensity={0.5} />
-              <About3DVisual />
-            </Canvas>
+            {showCanvas && (
+              <Canvas camera={{ position: [0, 0, 4.5], fov: 60 }}>
+                <ambientLight intensity={0.5} />
+                <About3DVisual />
+              </Canvas>
+            )}
           </div>
         </div>
       </div>

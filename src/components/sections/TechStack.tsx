@@ -57,15 +57,16 @@ const TechStack = () => {
 
   // Birds configuration
   const birds = [
-    { top: '12%', size: 'scale-[0.55]', delay: '0s', duration: '18s' },
-    { top: '22%', size: 'scale-[0.45]', delay: '5s', duration: '22s' },
-    { top: '15%', size: 'scale-[0.65]', delay: '10s', duration: '15s' }
+    { top: '12%', size: 'scale-[0.55]', delay: 0, duration: 18 },
+    { top: '22%', size: 'scale-[0.45]', delay: 5, duration: 22 },
+    { top: '15%', size: 'scale-[0.65]', delay: 10, duration: 15 }
   ];
 
-  const animationStyle = {
+  // Common play state styling helper
+  const getPlayState = (baseDuration: number) => ({
     animationPlayState: isPaused ? 'paused' : 'running',
-    '--speed-multiplier': `${1 / speed}`,
-  } as React.CSSProperties;
+    animationDuration: `${baseDuration * (1 / speed)}s`,
+  });
 
   return (
     <section
@@ -101,32 +102,32 @@ const TechStack = () => {
         }
 
         .animate-scroll-clouds {
-          animation: scroll-scenery-loop calc(46s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery-loop linear infinite;
         }
         .animate-scroll-hills {
-          animation: scroll-scenery-loop calc(28s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery-loop linear infinite;
         }
         .animate-scroll-street-conveyor {
-          animation: scroll-scenery-loop calc(30s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery-loop linear infinite;
         }
         .animate-scroll-road {
-          animation: scroll-scenery-loop calc(1.5s * var(--speed-multiplier)) linear infinite;
+          animation: scroll-scenery-loop linear infinite;
         }
         .animate-rider-bob {
-          animation: rider-pedal-bob calc(0.42s * var(--speed-multiplier)) ease-in-out infinite;
+          animation: rider-pedal-bob ease-in-out infinite;
         }
         .animate-shadow-bob {
-          animation: shadow-shrink calc(0.42s * var(--speed-multiplier)) ease-in-out infinite;
+          animation: shadow-shrink ease-in-out infinite;
         }
         .animate-wing-flap {
           animation: wing-flap 0.32s ease-in-out infinite;
           transform-origin: center;
         }
         .animate-bird-fly {
-          animation: bird-fly-across calc(var(--fly-duration) * var(--speed-multiplier)) linear infinite;
+          animation: bird-fly-across linear infinite;
         }
         .animate-wheel-spin {
-          animation: spinner-wheel calc(0.35s * var(--speed-multiplier)) linear infinite;
+          animation: spinner-wheel linear infinite;
         }
       `}} />
 
@@ -153,7 +154,7 @@ const TechStack = () => {
       <div
         className={`reveal-item w-full h-[45vh] md:h-[55vh] border border-[#1E1E2E]/60 rounded-2xl relative overflow-hidden flex flex-col justify-end shadow-2xl transition-all duration-700 ${
           isNight
-            ? 'bg-gradient-to-b from-indigo-950 via-purple-900 to-orange-850'
+            ? 'bg-gradient-to-b from-indigo-950 via-purple-900 to-orange-800'
             : 'bg-gradient-to-b from-sky-400 to-sky-100'
         }`}
       >
@@ -172,11 +173,11 @@ const TechStack = () => {
             key={idx}
             className={`absolute z-10 w-8 h-4 animate-bird-fly pointer-events-none select-none ${b.size}`}
             style={{
-              ...animationStyle,
               top: b.top,
-              animationDelay: b.delay,
-              '--fly-duration': b.duration,
-            } as React.CSSProperties}
+              animationPlayState: isPaused ? 'paused' : 'running',
+              animationDelay: `${b.delay * (1 / speed)}s`,
+              animationDuration: `${b.duration * (1 / speed)}s`,
+            }}
           >
             <svg viewBox="0 0 32 16" className="w-full h-full fill-current text-neutral-800 opacity-60">
               <path
@@ -194,7 +195,7 @@ const TechStack = () => {
         {/* Clouds (Parallax 1) */}
         <div
           className="absolute inset-x-0 top-8 h-20 opacity-30 pointer-events-none flex whitespace-nowrap animate-scroll-clouds"
-          style={animationStyle}
+          style={getPlayState(46)}
         >
           <div className="flex gap-48 shrink-0 w-full justify-around">
             <div className="w-20 h-6 bg-white rounded-full filter blur-[1px]"></div>
@@ -209,7 +210,7 @@ const TechStack = () => {
         {/* Green Hills (Parallax 2) */}
         <div
           className="absolute inset-x-0 bottom-[65px] h-24 flex whitespace-nowrap pointer-events-none opacity-80 animate-scroll-hills"
-          style={animationStyle}
+          style={getPlayState(28)}
         >
           <div className="flex shrink-0 w-full" style={{ color: isNight ? '#241442' : '#34d399' }}>
             <svg className="w-full h-full fill-current" viewBox="0 0 100 10" preserveAspectRatio="none">
@@ -226,7 +227,7 @@ const TechStack = () => {
         {/* Conveyor Marquee Scenery Layer: Tech Buildings & Roadside Trees with clean gaps */}
         <div
           className="absolute bottom-[60px] h-64 z-20 flex flex-row items-end gap-24 md:gap-32 w-[200%] whitespace-nowrap animate-scroll-street-conveyor px-8"
-          style={animationStyle}
+          style={getPlayState(30)}
         >
           {doubledSkills.map((skill, idx) => {
             const isDevelop = skillCategories[skill] === 'DEVELOP';
@@ -295,7 +296,7 @@ const TechStack = () => {
         {/* Sidewalk & Asphalt Road */}
         <div
           className="w-[200%] h-[60px] bg-[#22222a] border-t-[4px] border-[#3b3b4f] shrink-0 z-30 flex whitespace-nowrap animate-scroll-road"
-          style={animationStyle}
+          style={getPlayState(1.5)}
         >
           <div className="w-full flex items-center justify-around">
             {[...Array(8)].map((_, idx) => (
@@ -315,14 +316,24 @@ const TechStack = () => {
         >
           {/* Animated Ground Shadow */}
           <div
-            className={`absolute bottom-[-2px] left-[15%] w-16 h-1.5 bg-black rounded-full filter blur-[1px] ${
-              !isPaused && 'animate-shadow-bob'
-            }`}
+            className="absolute bottom-[-2px] left-[15%] w-16 h-1.5 bg-black rounded-full filter blur-[1px]"
+            style={{
+              animationPlayState: isPaused ? 'paused' : 'running',
+              animationDuration: `${0.42 * (1 / speed)}s`,
+              animationName: 'shadow-shrink',
+              animationIterationCount: 'infinite'
+            }}
           ></div>
 
           <svg className="w-full h-auto drop-shadow-md relative z-10" viewBox="0 0 100 80" fill="none">
             {/* Front Wheel (Spinning) */}
-            <g className={`${!isPaused && 'animate-wheel-spin'}`} style={{ transformOrigin: '25px 65px' }}>
+            <g
+              className={`${!isPaused && 'animate-wheel-spin'}`}
+              style={{
+                transformOrigin: '25px 65px',
+                animationDuration: `${0.35 * (1 / speed)}s`
+              }}
+            >
               <circle cx="25" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
               <line x1="25" y1="54" x2="25" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
               <line x1="14" y1="65" x2="36" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
@@ -331,7 +342,13 @@ const TechStack = () => {
             </g>
 
             {/* Back Wheel (Spinning) */}
-            <g className={`${!isPaused && 'animate-wheel-spin'}`} style={{ transformOrigin: '75px 65px' }}>
+            <g
+              className={`${!isPaused && 'animate-wheel-spin'}`}
+              style={{
+                transformOrigin: '75px 65px',
+                animationDuration: `${0.35 * (1 / speed)}s`
+              }}
+            >
               <circle cx="75" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
               <line x1="75" y1="54" x2="75" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
               <line x1="64" y1="65" x2="86" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
@@ -363,7 +380,12 @@ const TechStack = () => {
             <circle cx="45" cy="65" r="2.5" fill="#888" />
 
             {/* Pedaling Smiling Rider (Bobs up/down to simulate pedal cadence) */}
-            <g className={`${!isPaused && 'animate-rider-bob'}`}>
+            <g
+              className={`${!isPaused && 'animate-rider-bob'}`}
+              style={{
+                animationDuration: `${0.42 * (1 / speed)}s`
+              }}
+            >
               {/* Torso/Body */}
               <line x1="49" y1="40" x2="52" y2="25" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="5.0" strokeLinecap="round" />
               

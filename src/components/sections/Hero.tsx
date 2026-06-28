@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useEffect, useRef, useMemo, useState } from 'react';
 import gsap from 'gsap';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -69,6 +69,7 @@ function DualRotatingSphere() {
 
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [showCanvas, setShowCanvas] = useState(false);
 
   // Split name for two lines (e.g. "SUMIT" and "PARISE")
   const nameParts = useMemo(() => {
@@ -80,6 +81,8 @@ const Hero = () => {
   }, []);
 
   useEffect(() => {
+    const canvasTimer = setTimeout(() => setShowCanvas(true), 1200);
+
     const ctx = gsap.context(() => {
       // 1. Line-by-line reveal of the name
       gsap.fromTo(
@@ -123,7 +126,10 @@ const Hero = () => {
       );
     }, containerRef);
 
-    return () => ctx.revert();
+    return () => {
+      clearTimeout(canvasTimer);
+      ctx.revert();
+    };
   }, []);
 
   return (
@@ -141,10 +147,12 @@ const Hero = () => {
       {/* 3D Centerpiece WebGL Canvas */}
       <div className="canvas-container absolute inset-0 w-full h-full z-10 flex items-center justify-center pointer-events-none opacity-0">
         <div className="w-full max-w-[900px] h-[80vh] md:h-screen">
-          <Canvas camera={{ position: [0, 0, 5.5], fov: 60 }}>
-            <ambientLight intensity={0.5} />
-            <DualRotatingSphere />
-          </Canvas>
+          {showCanvas && (
+            <Canvas camera={{ position: [0, 0, 5.5], fov: 60 }}>
+              <ambientLight intensity={0.5} />
+              <DualRotatingSphere />
+            </Canvas>
+          )}
         </div>
       </div>
 

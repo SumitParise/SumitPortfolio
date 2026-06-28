@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import useScrollReveal from '../../hooks/useScrollReveal';
@@ -32,6 +32,12 @@ function WhatIDo3DVisual() {
 
 const Skills = () => {
   const containerRef = useScrollReveal<HTMLDivElement>();
+  const [showCanvas, setShowCanvas] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowCanvas(true), 1800);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Filter skills dynamically from PORTFOLIO.skills
   const devSkills = PORTFOLIO.skills.filter(skill =>
@@ -56,10 +62,12 @@ const Skills = () => {
         </h3>
         
         <div className="w-full max-w-[280px] h-[180px] pointer-events-none select-none">
-          <Canvas camera={{ position: [0, 0, 3], fov: 60 }}>
-            <ambientLight intensity={0.5} />
-            <WhatIDo3DVisual />
-          </Canvas>
+          {showCanvas && (
+            <Canvas camera={{ position: [0, 0, 3], fov: 60 }}>
+              <ambientLight intensity={0.5} />
+              <WhatIDo3DVisual />
+            </Canvas>
+          )}
         </div>
       </div>
 
