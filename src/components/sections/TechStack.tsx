@@ -88,9 +88,9 @@ const TechStack = () => {
           0% { transform: translate3d(600px, 0, 0); }
           100% { transform: translate3d(-1000px, 0, 0); }
         }
-        @keyframes rider-pedal-bob {
+        @keyframes motorcycle-idle-vibrate {
           0%, 100% { transform: translate3d(0, 0, 0); }
-          50% { transform: translate3d(0, -3px, 0); }
+          50% { transform: translate3d(0, -1px, 0); }
         }
         @keyframes shadow-shrink {
           0%, 100% { transform: scale(1.0); opacity: 0.25; }
@@ -113,8 +113,8 @@ const TechStack = () => {
         .animate-scroll-road {
           animation: scroll-scenery-loop linear infinite;
         }
-        .animate-rider-bob {
-          animation: rider-pedal-bob ease-in-out infinite;
+        .animate-motorcycle-rumble {
+          animation: motorcycle-idle-vibrate 0.08s ease-in-out infinite;
         }
         .animate-shadow-bob {
           animation: shadow-shrink ease-in-out infinite;
@@ -146,7 +146,7 @@ const TechStack = () => {
         </h3>
         
         <p className="text-[#6B6B80] max-w-lg font-sans text-xs md:text-sm">
-          Sumit is pedaling along the city street on his bicycle. Watch the birds fly and inspect the skills listed on passing buildings!
+          Sumit is cruising along the city street on his motorcycle. Watch the birds fly and inspect the skills listed on passing buildings!
         </p>
       </div>
 
@@ -364,7 +364,7 @@ const TechStack = () => {
           </div>
         </div>
 
-        {/* Dynamic Vector SVG Cyclist (Fixed: Added scale-x-[-1] to flip rider to face the right direction of travel) */}
+        {/* Dynamic Vector SVG Cruiser Motorcycle (Flipped horizontally via scale-x-[-1] to travel right) */}
         <div
           className={`absolute left-[18%] bottom-[52px] w-24 md:w-28 z-40 transition-all duration-300 select-none scale-x-[-1]`}
         >
@@ -379,92 +379,105 @@ const TechStack = () => {
             }}
           ></div>
 
-          <svg className="w-full h-auto drop-shadow-md relative z-10" viewBox="0 0 100 80" fill="none">
-            {/* Front Wheel (Spinning) */}
-            <g
-              className={`${!isPaused && 'animate-wheel-spin'}`}
-              style={{
-                transformOrigin: '25px 65px',
-                animationDuration: `${0.35 * (1 / speed)}s`
-              }}
-            >
-              <circle cx="25" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
-              <line x1="25" y1="54" x2="25" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
-              <line x1="14" y1="65" x2="36" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
-              <line x1="17.2" y1="57.2" x2="32.8" y2="72.8" stroke="#6B6B80" strokeWidth="0.8" />
-              <line x1="17.2" y1="72.8" x2="32.8" y2="57.2" stroke="#6B6B80" strokeWidth="0.8" />
-            </g>
+          {/* Motorcycle rumble frame */}
+          <div className={`${!isPaused && 'animate-motorcycle-rumble'}`}>
+            <svg className="w-full h-auto drop-shadow-md relative z-10" viewBox="0 0 100 80" fill="none">
+              {/* Rear Wheel (Left inside SVG) */}
+              <g
+                className={`${!isPaused && 'animate-wheel-spin'}`}
+                style={{
+                  transformOrigin: '25px 62px',
+                  animationDuration: `${0.2 * (1 / speed)}s`
+                }}
+              >
+                <circle cx="25" cy="62" r="12" stroke="#1c1917" strokeWidth="4.5" fill="none" />
+                <circle cx="25" cy="62" r="9" stroke="#78716c" strokeWidth="1.5" fill="none" />
+                {/* Spokes */}
+                <line x1="25" y1="50" x2="25" y2="74" stroke="#d6d3d1" strokeWidth="1" />
+                <line x1="13" y1="62" x2="37" y2="62" stroke="#d6d3d1" strokeWidth="1" />
+              </g>
 
-            {/* Back Wheel (Spinning) */}
-            <g
-              className={`${!isPaused && 'animate-wheel-spin'}`}
-              style={{
-                transformOrigin: '75px 65px',
-                animationDuration: `${0.35 * (1 / speed)}s`
-              }}
-            >
-              <circle cx="75" cy="65" r="11" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" />
-              <line x1="75" y1="54" x2="75" y2="76" stroke="#6B6B80" strokeWidth="0.8" />
-              <line x1="64" y1="65" x2="86" y2="65" stroke="#6B6B80" strokeWidth="0.8" />
-              <line x1="67.2" y1="57.2" x2="82.8" y2="72.8" stroke="#6B6B80" strokeWidth="0.8" />
-              <line x1="67.2" y1="72.8" x2="82.8" y2="57.2" stroke="#6B6B80" strokeWidth="0.8" />
-            </g>
+              {/* Front Wheel (Right inside SVG) */}
+              <g
+                className={`${!isPaused && 'animate-wheel-spin'}`}
+                style={{
+                  transformOrigin: '75px 62px',
+                  animationDuration: `${0.2 * (1 / speed)}s`
+                }}
+              >
+                <circle cx="75" cy="62" r="12" stroke="#1c1917" strokeWidth="4.5" fill="none" />
+                <circle cx="75" cy="62" r="9" stroke="#78716c" strokeWidth="1.5" fill="none" />
+                {/* Spokes */}
+                <line x1="75" y1="50" x2="75" y2="74" stroke="#d6d3d1" strokeWidth="1" />
+                <line x1="63" y1="62" x2="87" y2="62" stroke="#d6d3d1" strokeWidth="1" />
+              </g>
 
-            {/* Bicycle Frame */}
-            <path
-              d="M25 65 L35 35 L32 28 M35 35 L56 45 M35 35 L48 65 M56 45 L48 65 M48 65 L75 65 M56 45 L75 65"
-              stroke={isNight ? "#00D4FF" : "#6C63FF"}
-              strokeWidth="2.2"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {/* Handlebars & Seat post */}
-            <path d="M32 28 L27 28 M56 45 L50 43" stroke={isNight ? "#00D4FF" : "#6C63FF"} strokeWidth="2.0" fill="none" strokeLinecap="round" />
+              {/* Exhaust Fume Puff Particles (Animates at tailpipe end 20,62) */}
+              {!isPaused && (
+                <g className="opacity-70">
+                  <circle cx="14" cy="62" r="1.5" fill="#a8a29e" className="animate-ping" style={{ animationDuration: '0.8s' }} />
+                  <circle cx="9" cy="63" r="2.5" fill="#d6d3d1" className="animate-pulse" style={{ animationDuration: '0.6s' }} />
+                </g>
+              )}
 
-            {/* Bicycle Basket & Front Light */}
-            <path d="M32 28 L27 28 L27 34 L32 34 Z" fill={isNight ? "#00D4FF" : "#6C63FF"} />
-            
-            {/* Headlight Beam (Cone of light in Night Mode) */}
-            {isNight && (
-              <polygon points="27,33 -10,38 -10,58" fill="url(#bike-light-cone)" fillOpacity="0.25" />
-            )}
+              {/* Mechanical Engine Block & Chrome Exhaust */}
+              <rect x="42" y="52" width="16" height="12" rx="2" fill="#57534e" stroke="#292524" strokeWidth="1" />
+              {/* Cooling Fins details */}
+              <line x1="42" y1="55" x2="58" y2="55" stroke="#a8a29e" strokeWidth="1" />
+              <line x1="42" y1="58" x2="58" y2="58" stroke="#a8a29e" strokeWidth="1" />
+              {/* Exhaust Pipe */}
+              <path d="M48 60 Q35 64 20 62" stroke="#d6d3d1" strokeWidth="2.5" fill="none" strokeLinecap="round" />
 
-            {/* Pedal Crank Center */}
-            <circle cx="48" cy="65" r="2.5" fill="#888" />
+              {/* Chassis Frame & Front Forks */}
+              <path d="M25 62 L42 62 M42 54 L65 42 M58 62 L75 62" stroke="#292524" strokeWidth="2.5" fill="none" />
+              {/* Front Fork */}
+              <line x1="75" y1="62" x2="68" y2="34" stroke="#d6d3d1" strokeWidth="2.5" strokeLinecap="round" />
+              {/* Handlebars */}
+              <line x1="68" y1="34" x2="62" y2="34" stroke="#1c1917" strokeWidth="2.2" strokeLinecap="round" />
 
-            {/* Pedaling Smiling Rider */}
-            <g
-              className={`${!isPaused && 'animate-rider-bob'}`}
-              style={{
-                animationDuration: `${0.42 * (1 / speed)}s`
-              }}
-            >
-              {/* Torso/Body (Sitting on seat at 56,43 and leaning to 48,25) */}
-              <line x1="56" y1="43" x2="48" y2="25" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="5.0" strokeLinecap="round" />
-              
-              {/* Face/Head (Smiling!) */}
-              <circle cx="48" cy="17" r="5.0" fill="#fcd34d" />
-              {/* Smiling details */}
-              <circle cx="46.5" cy="16" r="0.6" fill="#000" />
-              <circle cx="49.5" cy="16" r="0.6" fill="#000" />
-              <path d="M46 18.5 Q48 20.2 50 18.5" stroke="#000" strokeWidth="0.75" fill="none" strokeLinecap="round" />
+              {/* Curved Sporty Fuel Tank */}
+              <path d="M48 44 Q58 38 68 44 L66 50 Q56 50 48 48 Z" fill={isNight ? "#00D4FF" : "#6C63FF"} stroke="#292524" strokeWidth="1" />
 
-              {/* Arms holding handlebars */}
-              <path d="M48 25 L38 27 L32 28" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="1.8" fill="none" strokeLinecap="round" />
-              
-              {/* Leg / Pedals (Jointed from hip to knee to foot pedal) */}
-              <path d="M56 43 L46 48 L45 58" stroke={isNight ? "#E8E8F0" : "#111118"} strokeWidth="2.2" fill="none" strokeLinecap="round" />
-            </g>
+              {/* Elongated Leather Cruiser Seat */}
+              <path d="M36 48 C40 47 44 47 48 48 C46 51 40 51 36 50 Z" fill="#1c1917" stroke="#292524" strokeWidth="1.2" />
 
-            {/* Gradients */}
-            <defs>
-              <linearGradient id="bike-light-cone" x1="27" y1="33" x2="-10" y2="48" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#ffea75" />
-                <stop offset="100%" stopColor="#ffea75" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-          </svg>
+              {/* Front Headlight & Red LED Tail Light */}
+              <circle cx="70" cy="38" r="3.5" fill="#fcd34d" />
+              <rect x="33" y="47" width="2" height="4" fill="#ef4444" />
+
+              {/* Headlight Beam Cone (in Night Mode) */}
+              {isNight && (
+                <polygon points="70,38 110,25 110,65" fill="url(#bike-light-cone-motorcycle)" fillOpacity="0.25" />
+              )}
+
+              {/* Cruising Motorcycle Rider (Designed to look real: Leather jacket, visor helmet, sporty posture) */}
+              <g>
+                {/* Torso / Back (Leather riding jacket) */}
+                <path d="M44 46 Q54 44 58 32" stroke="#1c1917" strokeWidth="6" strokeLinecap="round" fill="none" />
+                {/* Jacket overlay highlight */}
+                <path d="M44 46 Q54 44 58 32" stroke={isNight ? "#00D4FF" : "#6C63FF"} strokeWidth="4.5" strokeLinecap="round" fill="none" />
+                
+                {/* Helmet (Cyan/Violet base with dark visor) */}
+                <circle cx="58" cy="22" r="6" fill={isNight ? "#00D4FF" : "#6C63FF"} />
+                {/* Dark Visor */}
+                <path d="M62 18 A 5 5 0 0 1 63 25" stroke="#1c1917" strokeWidth="2" fill="none" strokeLinecap="round" />
+                
+                {/* Hands/Arms (Gripping handlebars 68,34) */}
+                <path d="M56 30 Q64 32 68 34" stroke="#1c1917" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                
+                {/* Legs (Bent around the fuel tank onto the footpegs) */}
+                <path d="M44 46 L53 54 L51 60" stroke="#1c1917" strokeWidth="3" fill="none" strokeLinecap="round" />
+              </g>
+
+              {/* Gradients */}
+              <defs>
+                <linearGradient id="bike-light-cone-motorcycle" x1="70" y1="38" x2="110" y2="45" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#ffea75" />
+                  <stop offset="100%" stopColor="#ffea75" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
         </div>
       </div>
 
