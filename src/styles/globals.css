@@ -231,3 +231,13 @@
 .corner-bracket-card:hover .corner-bracket-child::after {
   border-color: var(--color-accent-2);
 }
+
+/* Loading Marquee Animation */
+@keyframes marquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-50%, 0, 0); }
+}
+
+.animate-marquee {
+  animation: marquee 24s linear infinite;
+}

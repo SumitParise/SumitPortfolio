@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Navbar from './components/Navbar';
 import Hero from './components/sections/Hero';
 import About from './components/sections/About';
@@ -8,10 +9,16 @@ import Contact from './components/sections/Contact';
 import Footer from './components/Footer';
 import CustomCursor from './components/CustomCursor';
 import SocialSidebar from './components/SocialSidebar';
+import Loading from './components/Loading';
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
+
   return (
     <div className="relative min-h-screen bg-[#0a0a0f] text-[#E8E8F0] selection:bg-[#6C63FF]/30 selection:text-white">
+      {/* Page Loading Screen */}
+      {isLoading && <Loading onComplete={() => setIsLoading(false)} />}
+
       {/* Custom Cursor for enhanced desktop interaction */}
       <CustomCursor />
       
