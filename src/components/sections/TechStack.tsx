@@ -41,6 +41,12 @@ const createTechTexture = (name: string, color: string) => {
       'Tailwind CSS': 'TW',
       'HTML5/CSS3': 'CSS',
       'FastAPI': 'API',
+      'Next.js': 'NEXT',
+      'MongoDB': 'DB',
+      'PostgreSQL': 'SQL',
+      'AWS': 'AWS',
+      'Express': 'EX',
+      'GraphQL': 'QL'
     };
     const text = displayMap[name] || name;
     ctx.fillText(text.toUpperCase(), 128, 128);
@@ -186,7 +192,7 @@ const TechStack = () => {
     'TypeScript': '#3178c6',
     'Node.js': '#339933',
     'Python': '#3776ab',
-    'Three.js': '#111118',
+    'Three.js': '#6366f1',
     'GSAP': '#88ce02',
     'REST APIs': '#ff6c37',
     'Git': '#f05032',
@@ -194,6 +200,12 @@ const TechStack = () => {
     'Tailwind CSS': '#38bdf8',
     'HTML5/CSS3': '#e34f26',
     'FastAPI': '#009688',
+    'Next.js': '#05050a',
+    'MongoDB': '#47A248',
+    'PostgreSQL': '#4169E1',
+    'AWS': '#FF9900',
+    'Express': '#333333',
+    'GraphQL': '#E10098'
   };
 
   // Generate canvas textures

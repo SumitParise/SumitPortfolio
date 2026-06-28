@@ -3,7 +3,7 @@ export const PORTFOLIO = {
   role: "Software Engineer",
   tagline: "I build things for the web.",
   about: `I'm a Software Engineer passionate about crafting clean, performant, and user-focused digital experiences. I love working at the intersection of design and engineering — turning complex problems into elegant solutions.`,
-  email: "sumitparise@gmail.com",
+  email: "parisesumit86@gmail.com",
   github: "https://github.com/SumitParise",
   linkedin: "https://linkedin.com/in/sumitparise",
   twitter: "https://x.com/sumitparise",
@@ -12,7 +12,8 @@ export const PORTFOLIO = {
   skills: [
     "React", "TypeScript", "Node.js", "Python",
     "Three.js", "GSAP", "REST APIs", "Git", "Docker",
-    "Tailwind CSS", "HTML5/CSS3", "FastAPI"
+    "Tailwind CSS", "HTML5/CSS3", "FastAPI",
+    "Next.js", "MongoDB", "PostgreSQL", "AWS", "Express", "GraphQL"
   ],
   projects: [
     {
