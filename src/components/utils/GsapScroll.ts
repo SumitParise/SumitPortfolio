@@ -11,20 +11,34 @@ export function setCharTimeline(
   }, 200);
 
   character?.traverse((object: any) => {
-    if (object.name === "screenlight" && object.material) {
-      object.material.transparent = true;
-      object.material.opacity = 1;
-      object.material.emissive.set("#C8BFFF");
-      gsap.timeline({ repeat: -1, repeatRefresh: true }).to(object.material, {
-        emissiveIntensity: () => intensity * 8,
-        duration: () => Math.random() * 0.6,
-        delay: () => Math.random() * 0.1,
-      });
-    }
-    if (object.isMesh && object.material && object.material.name === "Material.027") {
-      object.material.transparent = true;
-      object.material.opacity = 1;
-      object.material.color.set("#FFFFFF");
+    try {
+      if (object.name === "screenlight" && object.material) {
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach((mat: any) => {
+          if (mat && mat.emissive && typeof mat.emissive.set === "function") {
+            mat.transparent = true;
+            mat.opacity = 1;
+            mat.emissive.set("#C8BFFF");
+            gsap.timeline({ repeat: -1, repeatRefresh: true }).to(mat, {
+              emissiveIntensity: () => intensity * 8,
+              duration: () => Math.random() * 0.6,
+              delay: () => Math.random() * 0.1,
+            });
+          }
+        });
+      }
+      if (object.isMesh && object.material) {
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.forEach((mat: any) => {
+          if (mat && mat.name === "Material.027" && mat.color && typeof mat.color.set === "function") {
+            mat.transparent = true;
+            mat.opacity = 1;
+            mat.color.set("#FFFFFF");
+          }
+        });
+      }
+    } catch (traversalError) {
+      console.warn(`Error applying GSAP timeline on object ${object.name}:`, traversalError);
     }
   });
 }
