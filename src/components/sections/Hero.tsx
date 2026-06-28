@@ -15,6 +15,9 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
   
   const sunRef = useRef<THREE.Mesh>(null);
   const sunCoronaRef = useRef<THREE.Mesh>(null);
+  const sunCoronaOuterRef = useRef<THREE.Mesh>(null);
+  const plasmaRef = useRef<THREE.Mesh>(null);
+  const flaresRef = useRef<(THREE.Mesh | null)[]>([]);
   
   const p1Ref = useRef<THREE.Mesh>(null);
   
@@ -24,6 +27,27 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
   const p3GroupRef = useRef<THREE.Group>(null);
 
   const pointsRef = useRef<THREE.Points>(null);
+
+  // Pre-generate 3D direction vectors and speeds for 80 heat flare particles
+  const flareParticlesCount = 80;
+  const flareData = useMemo(() => {
+    const data = [];
+    for (let i = 0; i < flareParticlesCount; i++) {
+      const theta = Math.random() * 2 * Math.PI;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const x = Math.sin(phi) * Math.cos(theta);
+      const y = Math.sin(phi) * Math.sin(theta);
+      const z = Math.cos(phi);
+      
+      data.push({
+        dir: new THREE.Vector3(x, y, z),
+        speed: 0.45 + Math.random() * 0.45,
+        offset: Math.random() * 8,
+        size: 0.02 + Math.random() * 0.03
+      });
+    }
+    return data;
+  }, []);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
@@ -56,23 +80,48 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
       p3GroupRef.current.rotation.y = time * 0.8;
     }
 
-    // 4. Rotate Sun and pulse Corona glow
+    // 4. Heat particles (Solar Flares) radiating outward
+    flaresRef.current.forEach((mesh, idx) => {
+      if (!mesh) return;
+      const p = flareData[idx];
+      const life = ((time * p.speed + p.offset) % 1.4); // travels out to 1.4 radius
+      const progress = life / 1.4;
+      
+      mesh.position.copy(p.dir).multiplyScalar(0.5 + progress * 1.0);
+      
+      if (mesh.material) {
+        (mesh.material as THREE.MeshBasicMaterial).opacity = (1 - progress) * 0.95;
+      }
+      const scale = 1 - progress;
+      mesh.scale.set(scale, scale, scale);
+    });
+
+    // 5. Rotate Sun, plasma, and pulse double Corona heat waves
     if (sunRef.current) {
       sunRef.current.rotation.y = time * 0.15;
     }
+    if (plasmaRef.current) {
+      plasmaRef.current.rotation.y = -time * 0.35;
+      plasmaRef.current.rotation.x = time * 0.18;
+    }
     if (sunCoronaRef.current) {
       sunCoronaRef.current.rotation.y = -time * 0.05;
-      const pulse = 1.0 + Math.sin(time * 1.5) * 0.03; // pulsing corona
+      const pulse = 1.0 + Math.sin(time * 2.2) * 0.035; // fast tight shimmer
       sunCoronaRef.current.scale.set(pulse, pulse, pulse);
     }
+    if (sunCoronaOuterRef.current) {
+      sunCoronaOuterRef.current.rotation.z = time * 0.03;
+      const pulseOuter = 1.0 + Math.cos(time * 1.3) * 0.06; // slower deep breath
+      sunCoronaOuterRef.current.scale.set(pulseOuter, pulseOuter, pulseOuter);
+    }
 
-    // 5. Smooth mouse tilt on the solar system
+    // 6. Smooth mouse tilt on the solar system
     if (modelGroupRef.current) {
       modelGroupRef.current.rotation.x = THREE.MathUtils.lerp(modelGroupRef.current.rotation.x, y * 0.45, 0.08);
       modelGroupRef.current.rotation.y = THREE.MathUtils.lerp(modelGroupRef.current.rotation.y, x * 0.45, 0.08);
     }
 
-    // 6. Starfield particles rotation
+    // 7. Starfield particles rotation
     if (pointsRef.current) {
       pointsRef.current.rotation.y = -time * 0.008 - x * 0.05;
       pointsRef.current.rotation.x = time * 0.001 - y * 0.05;
@@ -98,8 +147,8 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
 
   return (
     <group>
-      {/* Central Sun point light source casting rays outward */}
-      <pointLight position={[0, 0, 0]} intensity={45} distance={15} color="#ffaa00" />
+      {/* Central Sun point light source casting warm rays */}
+      <pointLight position={[0, 0, 0]} intensity={50} distance={15} color="#ff8800" />
 
       {/* Main Solar System Model Group (Tilts with mouse) */}
       <group ref={modelGroupRef}>
@@ -108,26 +157,64 @@ function DualRotatingSphere({ mouseRef }: SphereProps) {
         <group>
           {/* Main Hot Sun Core */}
           <mesh ref={sunRef}>
-            <sphereGeometry args={[0.52, 32, 32]} />
+            <sphereGeometry args={[0.5, 32, 32]} />
             <meshStandardMaterial
               color="#ffcc00"
-              emissive="#ff4400"
-              emissiveIntensity={2.5}
-              roughness={0.2}
+              emissive="#ff3700"
+              emissiveIntensity={2.8}
+              roughness={0.15}
               metalness={0.1}
             />
           </mesh>
-          {/* Glowing Sun Corona Aura */}
+          
+          {/* Solar Plasma Turbulence Layer (boiling moiré texture) */}
+          <mesh ref={plasmaRef}>
+            <sphereGeometry args={[0.505, 24, 24]} />
+            <meshBasicMaterial
+              color="#ff4500"
+              wireframe
+              transparent
+              opacity={0.35}
+              blending={THREE.AdditiveBlending}
+            />
+          </mesh>
+
+          {/* Inner Glowing Sun Corona */}
           <mesh ref={sunCoronaRef}>
-            <sphereGeometry args={[0.58, 32, 32]} />
+            <sphereGeometry args={[0.56, 32, 32]} />
             <meshBasicMaterial
               color="#ff7700"
               transparent
-              opacity={0.4}
+              opacity={0.45}
               blending={THREE.AdditiveBlending}
               depthWrite={false}
             />
           </mesh>
+
+          {/* Outer Sun Corona Atmosphere (Heat Haze) */}
+          <mesh ref={sunCoronaOuterRef}>
+            <sphereGeometry args={[0.66, 32, 32]} />
+            <meshBasicMaterial
+              color="#ff3300"
+              transparent
+              opacity={0.25}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+
+          {/* Radial Heat Flare Particles (Solar Wind) */}
+          {flareData.map((p, idx) => (
+            <mesh key={idx} ref={(el) => { flaresRef.current[idx] = el; }}>
+              <sphereGeometry args={[p.size, 8, 8]} />
+              <meshBasicMaterial
+                color="#ff4400"
+                transparent
+                blending={THREE.AdditiveBlending}
+                depthWrite={false}
+              />
+            </mesh>
+          ))}
         </group>
 
         {/* Orbit 1 (Inner - Tilted slightly) */}
