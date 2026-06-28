@@ -4,63 +4,137 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { PORTFOLIO } from '../../data/portfolio';
 
-// Double rotating 3D centerpiece
-function DualRotatingSphere() {
+// 3D centerpiece interaction props
+interface SphereProps {
+  mouseRef: React.MutableRefObject<{ x: number; y: number }>;
+}
+
+// Double rotating 3D centerpiece with interactive mouse tracking and lighting
+function DualRotatingSphere({ mouseRef }: SphereProps) {
   const outerSphereRef = useRef<THREE.Mesh>(null);
   const innerSphereRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
   const pointsRef = useRef<THREE.Points>(null);
+  const lightRef = useRef<THREE.PointLight>(null);
 
   useFrame((state) => {
     const time = state.clock.getElapsedTime();
-    
-    // Outer Sphere - slow rotation
+    const { x, y } = mouseRef.current;
+
+    // 1. Smoothly position the point light relative to pointer coords
+    if (lightRef.current) {
+      lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, x * 4.5, 0.08);
+      lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, y * 4.5, 0.08);
+    }
+
+    // 2. Rotate & sway outer sphere based on mouse tracking
     if (outerSphereRef.current) {
-      outerSphereRef.current.rotation.x = time * 0.05;
-      outerSphereRef.current.rotation.y = time * 0.08;
-      // Gentle breathing animation
+      outerSphereRef.current.rotation.x = THREE.MathUtils.lerp(outerSphereRef.current.rotation.x, time * 0.04 + y * 0.4, 0.05);
+      outerSphereRef.current.rotation.y = THREE.MathUtils.lerp(outerSphereRef.current.rotation.y, time * 0.06 + x * 0.4, 0.05);
       const scale = 1.8 + Math.sin(time * 0.5) * 0.08;
       outerSphereRef.current.scale.set(scale, scale, scale);
     }
 
-    // Inner Sphere - faster rotation in opposite direction
+    // 3. Rotate & sway inner sphere (counter rotation)
     if (innerSphereRef.current) {
-      innerSphereRef.current.rotation.x = -time * 0.1;
-      innerSphereRef.current.rotation.y = -time * 0.15;
+      innerSphereRef.current.rotation.x = THREE.MathUtils.lerp(innerSphereRef.current.rotation.x, -time * 0.08 - y * 0.25, 0.05);
+      innerSphereRef.current.rotation.y = THREE.MathUtils.lerp(innerSphereRef.current.rotation.y, -time * 0.12 - x * 0.25, 0.05);
       const scale = 1.0 + Math.sin(time * 0.5) * 0.04;
       innerSphereRef.current.scale.set(scale, scale, scale);
     }
 
-    // Outer particle shell rotation
+    // 4. Sway orbiting torus ring
+    if (ringRef.current) {
+      ringRef.current.rotation.x = THREE.MathUtils.lerp(ringRef.current.rotation.x, Math.PI / 4 + y * 0.2, 0.05);
+      ringRef.current.rotation.y = THREE.MathUtils.lerp(ringRef.current.rotation.y, time * 0.09 + x * 0.2, 0.05);
+      ringRef.current.rotation.z = time * 0.03;
+    }
+
+    // 5. Sway surrounding particle starfield
     if (pointsRef.current) {
-      pointsRef.current.rotation.y = -time * 0.03;
-      pointsRef.current.rotation.x = time * 0.01;
+      pointsRef.current.rotation.y = -time * 0.015 - x * 0.08;
+      pointsRef.current.rotation.x = time * 0.003 - y * 0.08;
+      const scale = 1.0 + Math.sin(time * 0.3) * 0.04;
+      pointsRef.current.scale.set(scale, scale, scale);
     }
   });
 
+  // Randomized starfield shell coordinates
+  const particlesCount = 260;
+  const positions = useMemo(() => {
+    const pos = new Float32Array(particlesCount * 3);
+    for (let i = 0; i < particlesCount; i++) {
+      const u = Math.random();
+      const v = Math.random();
+      const theta = u * 2.0 * Math.PI;
+      const phi = Math.acos(2.0 * v - 1.0);
+      const r = 2.4 + Math.random() * 2.6; // radius shell
+      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = r * Math.cos(phi);
+    }
+    return pos;
+  }, []);
+
   return (
     <group>
+      {/* Light source tracking the pointer cursor */}
+      <pointLight ref={lightRef} intensity={25} distance={12} color="#00D4FF" />
+
       {/* Outer Dense Wireframe Sphere */}
       <mesh ref={outerSphereRef}>
         <icosahedronGeometry args={[1.3, 2]} />
-        <meshBasicMaterial color="#6C63FF" wireframe transparent opacity={0.35} />
+        <meshStandardMaterial
+          color="#6C63FF"
+          wireframe
+          transparent
+          opacity={0.4}
+          roughness={0.2}
+          metalness={0.8}
+        />
       </mesh>
 
       {/* Inner Wireframe Sphere */}
       <mesh ref={innerSphereRef}>
         <icosahedronGeometry args={[0.8, 1]} />
-        <meshBasicMaterial color="#00D4FF" wireframe transparent opacity={0.3} />
+        <meshStandardMaterial
+          color="#00D4FF"
+          wireframe
+          transparent
+          opacity={0.35}
+          roughness={0.15}
+          metalness={0.9}
+        />
       </mesh>
-      
-      {/* Surrounding Particles (using standard sphereGeometry to prevent binding crashes) */}
+
+      {/* Orbiting flat Torus Ring */}
+      <mesh ref={ringRef}>
+        <torusGeometry args={[1.9, 0.012, 8, 64]} />
+        <meshStandardMaterial
+          color="#00D4FF"
+          roughness={0.15}
+          metalness={0.85}
+          emissive="#00D4FF"
+          emissiveIntensity={0.25}
+        />
+      </mesh>
+
+      {/* Surrounding starfield particles */}
       <points ref={pointsRef}>
-        <sphereGeometry args={[3.2, 20, 20]} />
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            args={[positions, 3]}
+          />
+        </bufferGeometry>
         <pointsMaterial
           color="#00D4FF"
-          size={0.04}
+          size={0.065}
           sizeAttenuation={true}
           transparent
-          opacity={0.5}
+          opacity={0.65}
           depthWrite={false}
+          blending={THREE.AdditiveBlending}
         />
       </points>
     </group>
@@ -70,14 +144,25 @@ function DualRotatingSphere() {
 const Hero = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [showCanvas, setShowCanvas] = useState(false);
+  const mouseRef = useRef({ x: 0, y: 0 });
 
-  // Split name for two lines (e.g. "SUMIT" and "PARISE")
+  // Split name for two lines
   const nameParts = useMemo(() => {
     const parts = PORTFOLIO.name.toUpperCase().split(' ');
     return {
       first: parts[0] || 'SUMIT',
       second: parts[1] || 'PARISE'
     };
+  }, []);
+
+  // Global mouse coordinates listener to prevent pointer-events issues
+  useEffect(() => {
+    const handleMouseMoveGlobal = (e: MouseEvent) => {
+      mouseRef.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouseRef.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener('mousemove', handleMouseMoveGlobal);
+    return () => window.removeEventListener('mousemove', handleMouseMoveGlobal);
   }, []);
 
   useEffect(() => {
@@ -149,8 +234,11 @@ const Hero = () => {
         <div className="w-full max-w-[900px] h-[80vh] md:h-screen">
           {showCanvas && (
             <Canvas camera={{ position: [0, 0, 5.5], fov: 60 }}>
-              <ambientLight intensity={0.5} />
-              <DualRotatingSphere />
+              <ambientLight intensity={0.4} />
+              {/* Static background contrast lights */}
+              <pointLight position={[-6, 6, 4]} intensity={5} color="#6C63FF" />
+              <pointLight position={[6, -6, 4]} intensity={5} color="#00D4FF" />
+              <DualRotatingSphere mouseRef={mouseRef} />
             </Canvas>
           )}
         </div>
