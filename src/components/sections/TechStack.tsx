@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import { PORTFOLIO } from '../../data/portfolio';
 
@@ -7,6 +7,21 @@ const TechStack = () => {
   const [isNight, setIsNight] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [speed, setSpeed] = useState(1); // 1 = Normal, 1.5 = Fast, 0.5 = Slow
+
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const isMobileSize = windowWidth < 768;
+  const padding = isMobileSize ? 48 : 96;
+  const containerWidth = Math.min(1152, Math.max(320, windowWidth - padding));
+  const speedRatio = containerWidth / 1152;
 
   const skills = PORTFOLIO.skills;
 
@@ -65,7 +80,7 @@ const TechStack = () => {
   // Common play state styling helper
   const getPlayState = (baseDuration: number) => ({
     animationPlayState: isPaused ? 'paused' : 'running',
-    animationDuration: `${baseDuration * (1 / speed)}s`,
+    animationDuration: `${baseDuration * speedRatio * (1 / speed)}s`,
   });
 
   return (
@@ -198,8 +213,8 @@ const TechStack = () => {
             style={{
               top: b.top,
               animationPlayState: isPaused ? 'paused' : 'running',
-              animationDelay: `${b.delay * (1 / speed)}s`,
-              animationDuration: `${b.duration * (1 / speed)}s`,
+              animationDelay: `${b.delay * speedRatio * (1 / speed)}s`,
+              animationDuration: `${b.duration * speedRatio * (1 / speed)}s`,
             }}
           >
             <svg viewBox="0 0 32 16" className="w-full h-full fill-current text-neutral-800 opacity-60">
