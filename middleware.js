@@ -1,30 +1,29 @@
-import { rewrite, next } from '@vercel/edge';
+import { get } from '@vercel/edge-config';
 
-export default function middleware(request) {
-  // Check if the MAINTENANCE environment variable is set to '1'
-  if (process.env.MAINTENANCE === '1') {
+export default async function middleware(request) {
+  // Read the maintenance flag from Edge Config at RUNTIME (no redeploy needed)
+  const isMaintenance = await get('maintenance');
+
+  if (isMaintenance === true) {
     const url = new URL(request.url);
-    
-    // If they are not already requesting the maintenance page, rewrite them to it.
-    // Using a rewrite instead of a redirect keeps the original URL in the user's browser.
+
+    // Don't redirect if already on the maintenance page (avoid loops)
     if (!url.pathname.startsWith('/maintenance.html')) {
       url.pathname = '/maintenance.html';
-      return rewrite(url);
+      return new Response(null, {
+        status: 307,
+        headers: { Location: url.toString() },
+      });
     }
   }
 
-  // Otherwise, proceed as normal
-  return next();
+  // Site is live — proceed normally
+  return undefined;
 }
 
-// Only run middleware on HTML requests (skip assets like images, js, css)
+// Only run on page requests, skip static assets
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - assets (vite output)
-     * - images, favicon, etc.
-     */
-    '/((?!assets|favicon.ico|developer_3d.png|models).*)',
+    '/((?!assets|favicon.ico|developer_3d.png|models|maintenance.html).*)',
   ],
 };
