@@ -23,60 +23,8 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
   const [inView, setInView] = useState(false);
   const [loadingModel, setLoadingModel] = useState(true);
   const [hasWebGL, setHasWebGL] = useState(true);
-  
-  // State for the processed chroma-keyed transparent image URL
-  const [processedImageSrc, setProcessedImageSrc] = useState<string>("");
 
-  // 1. Automatically remove the solid black background from the fallback image on load
-  useEffect(() => {
-    let active = true;
-    const img = new Image();
-    img.src = "/developer_3d.png";
-    img.onload = () => {
-      if (!active) return;
-      
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-      
-      ctx.drawImage(img, 0, 0);
-      try {
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imgData.data;
-
-        // Sample background color at top-left pixel (0, 0)
-        const bgR = data[0];
-        const bgG = data[1];
-        const bgB = data[2];
-
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-
-          // Calculate absolute color distance to background
-          const colorDistance = Math.abs(r - bgR) + Math.abs(g - bgG) + Math.abs(b - bgB);
-          
-          // Make background pixels transparent
-          if (colorDistance < 25) {
-            data[i + 3] = 0; // set alpha channel to transparent
-          }
-        }
-        ctx.putImageData(imgData, 0, 0);
-        setProcessedImageSrc(canvas.toDataURL("image/png"));
-      } catch (err) {
-        console.warn("Unable to chroma-key image locally:", err);
-      }
-    };
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  // 2. Intersection Observer to conditionally mount WebGL Canvas
+  // 1. Intersection Observer to conditionally mount WebGL Canvas
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -94,7 +42,7 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
     return () => observer.disconnect();
   }, []);
 
-  // 3. Initialize WebGL scene only when inView is true
+  // 2. Initialize WebGL scene only when inView is true
   useEffect(() => {
     if (!inView) {
       setLoadingModel(true);
@@ -339,15 +287,13 @@ const Scene = ({ view = "skills" }: { view?: "skills" | "about" }) => {
       {/* 1. Purple Circle Rim Backdrop */}
       <div className="character-rim"></div>
 
-      {/* 2. Processed Chroma-keyed Fallback/Placeholder Image */}
+      {/* 2. Fallback/Placeholder Image */}
       {(!hasWebGL || loadingModel) && (
         <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none select-none">
           <img
-            src={processedImageSrc || undefined}
+            src="/developer_3d.png"
             alt="3D Coder character placeholder"
-            className={`w-[240px] md:w-[320px] h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-opacity duration-300 ${
-              processedImageSrc ? "opacity-100" : "opacity-0"
-            }`}
+            className="w-[240px] md:w-[320px] h-auto object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.5)] transition-opacity duration-500 opacity-100"
           />
         </div>
       )}
