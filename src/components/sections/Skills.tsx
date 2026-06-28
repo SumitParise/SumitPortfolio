@@ -8,10 +8,10 @@ const Skills = () => {
     <section
       id="skills"
       ref={containerRef}
-      className="whatIDO py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto flex flex-col lg:flex-row gap-12 md:gap-16 items-center justify-between overflow-hidden"
+      className="whatIDO py-20 md:py-32 px-6 md:px-12 max-w-6xl mx-auto flex flex-col md:flex-row gap-12 md:gap-16 items-center justify-between overflow-hidden"
     >
       {/* Title & 3D Character Column (Left/Center) */}
-      <div className="reveal-item w-full lg:w-1/2 flex items-center justify-center relative min-h-[380px] md:min-h-[480px]">
+      <div className="reveal-item w-full md:w-1/2 flex items-center justify-center relative min-h-[380px] md:min-h-[480px]">
         {/* Background "WHAT I DO" text */}
         <div className="absolute left-0 top-[22%] z-0 font-heading font-black text-6xl md:text-[7.5rem] leading-[0.8] uppercase select-none text-white/5 flex flex-col items-start">
           <span>WHAT</span>
@@ -19,12 +19,12 @@ const Skills = () => {
         </div>
         
         {/* 3D Character (Desktop) */}
-        <div className="hidden lg:block absolute inset-0 z-10 w-full h-full">
+        <div className="hidden md:block absolute inset-0 z-10 w-full h-full">
           <CharacterModel />
         </div>
 
         {/* Overlapping 3D developer character (mobile only backup) */}
-        <div className="lg:hidden relative z-10 w-[280px] md:w-[390px] h-auto pointer-events-none translate-x-[50px] md:translate-x-[70px] translate-y-[10px]">
+        <div className="md:hidden relative z-10 w-[280px] md:w-[390px] h-auto pointer-events-none translate-x-[50px] md:translate-x-[70px] translate-y-[10px]">
           <img
             src="/developer_3d.png"
             alt="3D Developer at desk"
@@ -34,7 +34,7 @@ const Skills = () => {
       </div>
 
       {/* Skills details column (Right) */}
-      <div className="what-box-in reveal-item w-full lg:w-[45%] flex flex-col gap-6 relative z-20">
+      <div className="what-box-in reveal-item w-full md:w-[45%] flex flex-col gap-6 relative z-20">
         
         {/* DEVELOP Card */}
         <div className="relative w-full p-8 border border-dashed border-[#1E1E2E]/80 rounded bg-transparent group">
