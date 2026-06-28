@@ -35,6 +35,31 @@ const setCharacter = (
                 child.castShadow = true;
                 child.receiveShadow = true;
                 mesh.frustumCulled = true;
+
+                // Stylize character clothing and cap for a stylish coder aesthetic
+                if (child.name === "BODY.SHIRT" || child.name === "Cube.002" || child.name === "Pant" || child.name === "Shoe") {
+                  mesh.material = (mesh.material as THREE.Material).clone();
+                  const mat = mesh.material as THREE.MeshStandardMaterial;
+                  mat.vertexColors = false;
+
+                  if (child.name === "BODY.SHIRT") {
+                    // Sleek dark gray hoodie
+                    mat.color.set("#1e1e2f");
+                    mat.roughness = 0.85;
+                  } else if (child.name === "Cube.002") {
+                    // Vibrant neon violet cap (brand accent)
+                    mat.color.set("#6C63FF");
+                    mat.roughness = 0.5;
+                  } else if (child.name === "Pant") {
+                    // Dark charcoal techwear pants
+                    mat.color.set("#161622");
+                    mat.roughness = 0.9;
+                  } else if (child.name === "Shoe") {
+                    // Sleek neon cyan sneakers (brand accent 2)
+                    mat.color.set("#00D4FF");
+                    mat.roughness = 0.4;
+                  }
+                }
               }
             });
             resolve(gltf);
